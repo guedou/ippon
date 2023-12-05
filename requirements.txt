@@ -1,3 +1,5 @@
 click
 pyray
 cffi
+requests
+bs4
