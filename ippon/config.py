@@ -9,6 +9,7 @@ import os.path
 class StaticConfiguration(object):
     _config_relative_directory_path = ".config/ippon/"
     _config_data_directory_name = "data"
+    _config_data_raw_directory_name = "raw"
     _config_competitions_directory_name = "competitions"
     _config_relative_filename = "config.ini"
 
@@ -19,6 +20,8 @@ class StaticConfiguration(object):
                                     _config_relative_filename)
     config_data_directory_path = os.path.join(config_directory_path,
                                               _config_data_directory_name)
+    config_data_raw_directory_path = os.path.join(config_data_directory_path,
+                                                  _config_data_raw_directory_name)  # noqa: E501
     config_competitions_directory_path = os.path.join(config_directory_path,
                                                       _config_competitions_directory_name)  # noqa: E501
 
@@ -30,6 +33,7 @@ def generate_directory_structure():
 
     for directory in [StaticConfiguration.config_directory_path,
                       StaticConfiguration.config_data_directory_path,
+                      StaticConfiguration.config_data_raw_directory_path,
                       StaticConfiguration.config_competitions_directory_path]:
         if not os.path.exists(directory):
             os.makedirs(directory)

@@ -7,11 +7,8 @@ from ippon.view import test_window
 
 
 @click.command(help="sync scores")
-@click.argument("month", type=click.INT)
-@click.argument("year", type=click.INT)
-@click.argument("day", type=click.INT)
-@click.option("--pretty", is_flag=True, default=False)
-def sync(month, year, day, pretty):
+@click.option("--max", default=-1)
+def sync(max):
     from ippon.sync import sync_logic
     sync_logic(month, year, day, pretty)
 
@@ -31,6 +28,7 @@ def stats(competition):
 @click.group()
 def main():
     pass
+
 
 main.add_command(stats)
 main.add_command(sync)
