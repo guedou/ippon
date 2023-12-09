@@ -21,10 +21,17 @@ def view():
     test_window()
 
 
+@click.command(help="display scores stats")
+@click.argument("competition", required=False)
+def stats(competition):
+    from ippon.stats import main as main_stats
+    main_stats(competition)
+
+
 @click.group()
 def main():
     pass
 
-
+main.add_command(stats)
 main.add_command(sync)
 main.add_command(view)

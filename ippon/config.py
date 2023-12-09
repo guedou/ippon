@@ -102,7 +102,7 @@ def init_config():
 
 if __name__ == "__main__":
     init_config()
-    config = load_configuation("ippon.ini")
+    config = load_configuation("config.ini")
     competitions = get_config_competitions(config)
     for competition in competitions:
         generate_directorty_competitions_structure(competition)
