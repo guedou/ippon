@@ -3,6 +3,7 @@
 
 from datetime import datetime
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -349,3 +350,43 @@ def build_logic():
         fd = gzip.open(competition_filepath, "w")
         fd.write(json.dumps([e["data"] for e in competition_data]).encode())
         fd.close()
+
+
+def logo_logic():
+    """
+    Download logos
+    """
+
+    # Load the configuration
+    try:
+        config = init_config(StaticConfiguration.config_file_path)
+    except FileNotFoundError:
+        print(f"{StaticConfiguration.config_file_path} not found!",
+            file=sys.stderr)
+        return
+
+    competitions = get_config_competitions(config)
+    for competition in competitions:
+        name = competition["name"]
+        print(f"[+] {name}")
+        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")  # noqa: E501
+        if not os.path.exists(competition_filepath):
+            continue
+        fd = gzip.open(competition_filepath, "r")
+        data = fd.read()
+        fd.close()
+        competitions = json.loads(data)
+        for competition in competitions:
+            for match in competition:
+                for team in match["teams"]:
+                    for team_name in team:
+                        if team_name == "team1" or team_name == "team2":
+                            logo_url = team[team_name]["logo"]
+                            logo_filename = hashlib.md5(logo_url.encode()).hexdigest() + ".png"  # noqa: E501
+                            logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)  # noqa: E501
+                            if not os.path.exists(logo_filepath):
+                                print(f"  [+] Downloading {logo_url}")
+                                r = requests.get(logo_url)
+                                fd = open(logo_filepath, "wb")
+                                fd.write(r.content)
+                                fd.close()

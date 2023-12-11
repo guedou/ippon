@@ -12,6 +12,7 @@ class StaticConfiguration(object):
     _config_data_raw_directory_name = "raw"
     _config_data_json_directory_name = "json"
     _config_competitions_directory_name = "competitions"
+    _config_logos_directory_name = "logos"
     _config_relative_filename = "config.ini"
 
     # Prepend the configuration directory path with the user home directory
@@ -27,6 +28,8 @@ class StaticConfiguration(object):
                                                    _config_data_json_directory_name)  # noqa: E501
     config_competitions_directory_path = os.path.join(config_directory_path,
                                                       _config_competitions_directory_name)  # noqa: E501
+    config_logos_directory_path = os.path.join(config_directory_path,
+                                               _config_logos_directory_name)  # noqa: E501
 
 
 def generate_directory_structure():
@@ -38,7 +41,8 @@ def generate_directory_structure():
                       StaticConfiguration.config_data_directory_path,
                       StaticConfiguration.config_data_raw_directory_path,
                       StaticConfiguration.config_data_json_directory_path,
-                      StaticConfiguration.config_competitions_directory_path]:
+                      StaticConfiguration.config_competitions_directory_path,
+                      StaticConfiguration.config_logos_directory_path]:
         if not os.path.exists(directory):
             os.makedirs(directory)
 

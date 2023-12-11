@@ -30,12 +30,19 @@ def stats(competition):
     main_stats(competition)
 
 
+@click.command(help="sync logos")
+def logo():
+    from ippon.sync import logo_logic
+    logo_logic()
+
+
 @click.group()
 def main():
     pass
 
 
 main.add_command(build)
+main.add_command(logo)
 main.add_command(stats)
 main.add_command(sync)
 main.add_command(view)
