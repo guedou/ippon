@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: GPL-2.0+
 # Guillaume Valadon <guillaume@valadon.net>
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import gzip
+import json
 import os
 import re
 import requests
 import sys
 
-from ippon.config import init_config, load_configuation, StaticConfiguration
-from ippon.utils import get_competitions_dates
+from ippon.config import init_config, StaticConfiguration, \
+                         get_config_competitions
+from ippon.utils import get_competitions_dates, get_all_dates
 
 from bs4 import BeautifulSoup, Tag
 
@@ -87,9 +89,10 @@ class Lequipe(object):
         return (goal_scorer, goal_time, goal_type)
 
     def parse(self):
-        soup = BeautifulSoup(self.content, "html.parser")
-
         competitions = []
+        if self.content is None:
+            return competitions
+        soup = BeautifulSoup(self.content, "html.parser")
 
         for live in soup.find_all("div", class_="Lives__section"):
             for competition in live.find_all("div", class_="Lives__compet"):
@@ -222,9 +225,8 @@ class Lequipe(object):
 
 def sync_logic(max):
 
-    init_config()
     try:
-        config = load_configuation(StaticConfiguration.config_file_path)
+        config = init_config(StaticConfiguration.config_file_path)
     except FileNotFoundError:
         print(f"{StaticConfiguration.config_file_path} not found!",
               file=sys.stderr)
@@ -235,11 +237,7 @@ def sync_logic(max):
     if today < max_end:
         max_end = today
 
-    dates_needed = []
-    for i in range((max_end - max_start).days + 1):
-        date = max_start + timedelta(days=i)
-        date = datetime.strftime(date, "%Y%m%d")
-        dates_needed.append(date)
+    dates_needed = get_all_dates(max_start, max_end)
 
     dates_retrieved = set()
     for year in [max_start.year, max_end.year]:
@@ -267,3 +265,87 @@ def sync_logic(max):
             if not scores_source.exists(date):
                 print(f"[+] Retrieving {date}")
                 scores_source.retrieve(date)
+
+
+def build_logic():
+    """
+    Convert raw scores to JSON
+    """
+
+    # Load the configuration
+    try:
+        config = init_config(StaticConfiguration.config_file_path)
+    except FileNotFoundError:
+        print(f"{StaticConfiguration.config_file_path} not found!",
+              file=sys.stderr)
+        return
+
+    max_start, max_end = get_competitions_dates(config)
+    today = datetime.today()
+    if today < max_end:
+        max_end = today
+
+    dates_needed = get_all_dates(max_start, max_end)
+
+    # Convert raw scores to JSON
+    if dates_needed:
+        print("[+] Converting raw scores to JSON")
+        for date in dates_needed:
+            year = date[:4]
+            filename_html = f"{date}.Football.html.gz"
+            filename_json = f"{date}.Football.json.gz"
+            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,  # noqa: E501
+                                     year)
+            filepath_json = os.path.join(directory, filename_json)
+            directory = os.path.join(StaticConfiguration.config_data_raw_directory_path,  # noqa: E501
+                                     year)
+            filepath_html = os.path.join(directory, filename_html)
+            if os.path.exists(filepath_html) and not os.path.exists(filepath_json):  # noqa: E501
+                scores_source = Lequipe(directory)
+                scores_source.load(date)
+                competitions = scores_source.parse()
+                if len(competitions):
+                    fd = gzip.open(filepath_json, "w")
+                    fd.write(json.dumps(competitions).encode())
+                    fd.close()
+
+    # Build the competitions JSON files
+    competitions = get_config_competitions(config)
+    for competition in competitions:
+        name = competition["name"]
+        print(f"[+] {name}")
+        competition_levels = {}
+        for date in dates_needed:
+            year = date[:4]
+            filename_json = f"{date}.Football.json.gz"
+            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,  # noqa: E501
+                                     year)
+            filepath_json = os.path.join(directory, filename_json)
+
+            if not os.path.exists(filepath_json):
+                continue
+
+            fd = gzip.open(filepath_json, "r")
+            data = fd.read()
+            fd.close()
+            competitions = json.loads(data)
+            competitions = [c for c in competitions if c["competition"]["name"] == name]  # noqa: E501
+
+            for competition in competitions:
+                level = competition["competition"]["level"]
+                competition_levels[level] = competition_levels.get(level, [])
+                competition_levels[level] += [competition]
+
+        competition_data = []
+        for level in competition_levels:
+            level_dates = [int(c["date"]) for c in competition_levels[level]]
+            level_dates.sort()
+            level_date = level_dates[0]
+
+            competition_data.append({"date": level_date, "data": competition_levels[level]})  # noqa: E501
+
+        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")  # noqa: E501
+        competition_data = sorted(competition_data, key=lambda c: c["date"])
+        fd = gzip.open(competition_filepath, "w")
+        fd.write(json.dumps([e["data"] for e in competition_data]).encode())
+        fd.close()

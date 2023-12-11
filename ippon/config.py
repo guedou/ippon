@@ -10,6 +10,7 @@ class StaticConfiguration(object):
     _config_relative_directory_path = ".config/ippon/"
     _config_data_directory_name = "data"
     _config_data_raw_directory_name = "raw"
+    _config_data_json_directory_name = "json"
     _config_competitions_directory_name = "competitions"
     _config_relative_filename = "config.ini"
 
@@ -22,6 +23,8 @@ class StaticConfiguration(object):
                                               _config_data_directory_name)
     config_data_raw_directory_path = os.path.join(config_data_directory_path,
                                                   _config_data_raw_directory_name)  # noqa: E501
+    config_data_json_directory_path = os.path.join(config_data_directory_path,
+                                                   _config_data_json_directory_name)  # noqa: E501
     config_competitions_directory_path = os.path.join(config_directory_path,
                                                       _config_competitions_directory_name)  # noqa: E501
 
@@ -34,27 +37,39 @@ def generate_directory_structure():
     for directory in [StaticConfiguration.config_directory_path,
                       StaticConfiguration.config_data_directory_path,
                       StaticConfiguration.config_data_raw_directory_path,
+                      StaticConfiguration.config_data_json_directory_path,
                       StaticConfiguration.config_competitions_directory_path]:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
 
-def generate_directorty_competitions_structure(competition):
+def generate_directory_competitions_structure(competition):
     """
     Generate the directory structure for competitions
     """
     name = competition["name"]
-    year = competition["year"]
+    date_start = competition["start"]
+    date_end = competition["end"]
+    year_start = date_start.split("/")[2]
+    year_end = date_end.split("/")[2]
 
-    # Create year directory
-    year_directory_path = os.path.join(StaticConfiguration.config_competitions_directory_path, year)  # noqa: E501
-    if not os.path.exists(year_directory_path):
-        os.makedirs(year_directory_path)
+    for year in set([year_start, year_end]):
+        # Create year directory
+        year_directory_path = os.path.join(StaticConfiguration.config_competitions_directory_path, year)  # noqa: E501
+        if not os.path.exists(year_directory_path):
+            os.makedirs(year_directory_path)
 
-    # Create competition directory
-    competition_directory_path = os.path.join(year_directory_path, name)
-    if not os.path.exists(competition_directory_path):
-        os.makedirs(competition_directory_path)
+        # Create competition directory
+        competition_directory_path = os.path.join(year_directory_path, name)
+        if not os.path.exists(competition_directory_path):
+            os.makedirs(competition_directory_path)
+
+        # Create data directories
+        for directory in [StaticConfiguration.config_data_raw_directory_path,
+                          StaticConfiguration.config_data_json_directory_path]:
+            data_directory_path = os.path.join(directory, year)
+            if not os.path.exists(data_directory_path):
+                os.makedirs(data_directory_path)
 
 
 def load_configuation(filename):
@@ -95,18 +110,18 @@ def get_config_competitions(config):
     return competitions
 
 
-def init_config():
+def init_config(config_file_path):
     """
     Check if the directories exist and create them if needed
     """
 
-    if not os.path.exists(StaticConfiguration.config_directory_path):
-        generate_directory_structure()
-
-
-if __name__ == "__main__":
-    init_config()
+    generate_directory_structure()
     config = load_configuation("config.ini")
     competitions = get_config_competitions(config)
     for competition in competitions:
-        generate_directorty_competitions_structure(competition)
+        generate_directory_competitions_structure(competition)
+    return config
+
+
+if __name__ == "__main__":
+    init_config(StaticConfiguration.config_file_path)

@@ -3,18 +3,23 @@
 
 import click
 
-from ippon.view import test_window
+
+@click.command(help="build scores")
+def build():
+    from ippon.sync import build_logic
+    build_logic()
 
 
 @click.command(help="sync scores")
 @click.option("--max", default=-1)
 def sync(max):
     from ippon.sync import sync_logic
-    sync_logic(month, year, day, pretty)
+    sync_logic(max)
 
 
 @click.command(help="display scores")
 def view():
+    from ippon.view import test_window
     test_window()
 
 
@@ -30,6 +35,7 @@ def main():
     pass
 
 
+main.add_command(build)
 main.add_command(stats)
 main.add_command(sync)
 main.add_command(view)
