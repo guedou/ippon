@@ -19,8 +19,8 @@ def sync(max):
 
 @click.command(help="display scores")
 def view():
-    from ippon.view import test_window
-    test_window()
+    from ippon.view import window_logic
+    window_logic()
 
 
 @click.command(help="display scores stats")
