@@ -75,25 +75,10 @@ def window_logic():
 
     game_id = ffi.new("int *")
 
-    team1_logo = load_image("/Users/guedou/.config/ippon/logos/f4508ee2dfa0362d36538b2371940994.png")
-    team1_texture = load_texture_from_image(team1_logo)
-
-    team2_logo = load_image("/Users/guedou/.config/ippon/logos/167c7f4bf8968065ba3f0f0a1173a7e9.png")
-    team2_texture = load_texture_from_image(team2_logo)
-
-    scores = [[], []]
-    scores[0].append("Marseille 3 - 0 Le_Havre")
-    scores[0].append("Lyon 3 - 3 Lorient")
-    #scores[0].append("Brest 1 - 1 Toulouse")
-
-    goals = []
-    goals.append("A. Sangante 18' csc")
-    goals.append("P. Aubameyang 21'")
-    goals.append("I. Sarr 84'")
-
-    scores[1].append("Brighton 2 - 2 Liverpool")
-    scores[1].append("West_Ham 2 - 2 Newcastle")
-    scores[1].append("Wolverhampton 1 - 1 Aston_Villa")
+    current_team1_logo = None
+    current_team2_logo = None
+    current_team1_texture = None
+    current_team2_texture = None
 
     while not window_should_close():
         begin_drawing()
@@ -114,7 +99,7 @@ def window_logic():
 
         new_scores = games[day_key]
 
-        print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
+        #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
         gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, 20), "%d " % len(games[day_key]), game_id, 1, len(games[day_key]), False)
 
@@ -163,18 +148,26 @@ def window_logic():
         team1_len = measure_text(team1, FONT_SIZE)
         draw_text(team1, 400 - int(x / 2) - team1_len - 20, int(480 / 4), FONT_SIZE, BLACK)
 
-        if team1_logo:
+        if current_team1_logo != team1_logo:
+            if current_team1_texture:
+                unload_texture(current_team1_texture)
+            current_team1_logo = team1_logo
             team1_logo = load_image(team1_logo)
-            team1_texture = load_texture_from_image(team1_logo)
-            draw_texture(team1_texture, 400 - int(x / 2) - team1_len - 20 - 40, int(480 / 4), WHITE)
+            current_team1_texture = load_texture_from_image(team1_logo)
+        if current_team1_texture:
+            draw_texture(current_team1_texture, 400 - int(x / 2) - team1_len - 20 - 40, int(480 / 4), WHITE)
 
         y = measure_text(team2, FONT_SIZE)
         draw_text(team2, 400 + int(x / 2) + 20, int(480 / 4), FONT_SIZE, BLACK)
 
-        if team2_logo:
+        if current_team2_logo != team2_logo:
+            if current_team2_texture:
+                unload_texture(current_team2_texture)
+            current_team2_logo = team2_logo
             team2_logo = load_image(team2_logo)
-            team2_texture = load_texture_from_image(team2_logo)
-            draw_texture(team2_texture, 400 + int(x / 2) + y + 40, int(480 / 4), WHITE)
+            current_team2_texture = load_texture_from_image(team2_logo)
+        if current_team2_texture:
+            draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40, int(480 / 4), WHITE)
 
         for i in range(len(team1_goals)):
             goal_len = measure_text(team1_goals[i], 20)
