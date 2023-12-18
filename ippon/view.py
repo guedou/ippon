@@ -49,7 +49,7 @@ def load_scores():
 
 def draw_date_time():
     locale.setlocale(locale.LC_TIME, "fr_FR")
-    draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK) # noqa: E501
+    draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK)  # noqa: E501
 
 
 def window_logic():
@@ -70,9 +70,6 @@ def window_logic():
     day_edit_box = False
     day_value = ffi.new("int *")
 
-    tmp1 = ffi.new("int *")
-    yyy = 0
-
     game_id = ffi.new("int *")
 
     current_team1_logo = None
@@ -80,24 +77,32 @@ def window_logic():
     current_team1_texture = None
     current_team2_texture = None
 
+    set_trace_log_level(LOG_NONE)
+
     while not window_should_close():
         begin_drawing()
+        set_target_fps(10)
+
+        if is_key_pressed(KEY_F):
+            toggle_fullscreen()
+
+        if is_key_pressed(KEY_D):
+            DRAW_GRID = ~DRAW_GRID
+
         clear_background(WHITE)
 
         if DRAW_GRID:
+            draw_fps(20, 480 - 40)
             for i in range(0, 480, 10):
                 draw_line(0, i, 800, i, GRAY)
 
             for i in range(0, 800, 10):
                 draw_line(i, 0, i, 480, GRAY)
 
-
         competitions_keys = [c for c in all_scores.keys()]
         competition_key = competitions_keys[value[0]]
         games = all_scores[competition_key]
         day_key = [d for d in all_scores[competition_key].keys()][day_value[0]]
-
-        new_scores = games[day_key]
 
         #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
