@@ -57,6 +57,8 @@ def window_logic():
     all_scores = load_scores()
 
     DRAW_GRID = False
+    ROTATE_TIME = time.time()
+    ROTATE_DELAY = 10
 
     ffi = FFI()
 
@@ -107,6 +109,11 @@ def window_logic():
         #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
         gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, 20), "%d " % len(games[day_key]), game_id, 1, len(games[day_key]), False)
+
+        if (time.time() - ROTATE_TIME) > ROTATE_DELAY:
+            ROTATE_TIME = time.time()
+            game_id[0] += 1
+            game_id[0] %= len(games[day_key])
 
         # Retrieve game information
         team1 = games[day_key][game_id[0] - 1][0]["team1"]["name"]
