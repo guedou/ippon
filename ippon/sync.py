@@ -362,7 +362,7 @@ def logo_logic():
         config = init_config(StaticConfiguration.config_file_path)
     except FileNotFoundError:
         print(f"{StaticConfiguration.config_file_path} not found!",
-            file=sys.stderr)
+              file=sys.stderr)
         return
 
     competitions = get_config_competitions(config)

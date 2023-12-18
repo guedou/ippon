@@ -51,7 +51,6 @@ def generate_directory_competitions_structure(competition):
     """
     Generate the directory structure for competitions
     """
-    name = competition["name"]
     date_start = competition["start"]
     date_end = competition["end"]
     year_start = date_start.split("/")[2]
