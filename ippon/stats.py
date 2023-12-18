@@ -23,8 +23,8 @@ def get_file_count(directory):
 
 def main(competition):
 
-    init_config()
     try:
+        init_config(StaticConfiguration.config_file_path)
         config = load_configuation(StaticConfiguration.config_file_path)
     except FileNotFoundError:
         print(f"{StaticConfiguration.config_file_path} not found!",

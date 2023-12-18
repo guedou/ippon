@@ -58,16 +58,6 @@ def generate_directory_competitions_structure(competition):
     year_end = date_end.split("/")[2]
 
     for year in set([year_start, year_end]):
-        # Create year directory
-        year_directory_path = os.path.join(StaticConfiguration.config_competitions_directory_path, year)  # noqa: E501
-        if not os.path.exists(year_directory_path):
-            os.makedirs(year_directory_path)
-
-        # Create competition directory
-        competition_directory_path = os.path.join(year_directory_path, name)
-        if not os.path.exists(competition_directory_path):
-            os.makedirs(competition_directory_path)
-
         # Create data directories
         for directory in [StaticConfiguration.config_data_raw_directory_path,
                           StaticConfiguration.config_data_json_directory_path]:
@@ -120,7 +110,7 @@ def init_config(config_file_path):
     """
 
     generate_directory_structure()
-    config = load_configuation("config.ini")
+    config = load_configuation(StaticConfiguration.config_file_path)
     competitions = get_config_competitions(config)
     for competition in competitions:
         generate_directory_competitions_structure(competition)
