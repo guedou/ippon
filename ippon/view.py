@@ -93,6 +93,12 @@ def window_logic():
 
         clear_background(WHITE)
 
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+           position = get_mouse_position()
+           print(get_mouse_position().x, get_mouse_position().y)
+           if 480 <= position.x <= 520 and 440 <= position.y <= 480:
+               toggle_fullscreen()
+
         if DRAW_GRID:
             draw_fps(20, 480 - 40)
             for i in range(0, 480, 10):
