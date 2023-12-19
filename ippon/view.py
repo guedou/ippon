@@ -10,7 +10,7 @@ import sys
 import time
 
 from ippon.config import init_config, StaticConfiguration, \
-                         get_config_competitions
+    get_config_competitions
 
 from cffi import FFI
 from pyray import *
@@ -94,10 +94,9 @@ def window_logic():
         clear_background(WHITE)
 
         if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-           position = get_mouse_position()
-           print(get_mouse_position().x, get_mouse_position().y)
-           if 480 <= position.x <= 520 and 440 <= position.y <= 480:
-               toggle_fullscreen()
+            position = get_mouse_position()
+            if 480 <= position.x <= 520 and 440 <= position.y <= 480:
+                toggle_fullscreen()
 
         if DRAW_GRID:
             draw_fps(20, 480 - 40)
@@ -114,7 +113,9 @@ def window_logic():
 
         #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
-        gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, 20), "%d " % len(games[day_key]), game_id, 1, len(games[day_key]), False)
+        gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, 20),
+                    "%d " % len(games[day_key]), game_id, 1,
+                    len(games[day_key]), False)
 
         if (time.time() - ROTATE_TIME) > ROTATE_DELAY:
             ROTATE_TIME = time.time()
@@ -160,11 +161,15 @@ def window_logic():
             goal[1] = goal[1].replace("’", "'")
             team2_goals.append(goal[0] + " " + goal[1] + goal_type)
 
-        x = measure_text("%+3s - %-3s" % (team1_score, team2_score), FONT_SIZE)
-        draw_text("%+3s - %-3s" % (team1_score, team2_score), 400 - int(x / 2), int(480 / 4), FONT_SIZE, BLACK)
+        x = measure_text("%+3s - %-3s" % (team1_score, team2_score),
+                         FONT_SIZE)
+        draw_text("%+3s - %-3s" % (team1_score, team2_score),
+                  400 - int(x / 2), int(480 / 4),
+                  FONT_SIZE, BLACK)
 
         team1_len = measure_text(team1, FONT_SIZE)
-        draw_text(team1, 400 - int(x / 2) - team1_len - 20, int(480 / 4), FONT_SIZE, BLACK)
+        draw_text(team1, 400 - int(x / 2) - team1_len - 20,
+                  int(480 / 4), FONT_SIZE, BLACK)
 
         if current_team1_logo != team1_logo:
             if current_team1_texture:
@@ -173,10 +178,13 @@ def window_logic():
             team1_logo = load_image(team1_logo)
             current_team1_texture = load_texture_from_image(team1_logo)
         if current_team1_texture:
-            draw_texture(current_team1_texture, 400 - int(x / 2) - team1_len - 20 - 40, int(480 / 4), WHITE)
+            draw_texture(current_team1_texture,
+                         400 - int(x / 2) - team1_len - 20 - 40,
+                         int(480 / 4), WHITE)
 
         y = measure_text(team2, FONT_SIZE)
-        draw_text(team2, 400 + int(x / 2) + 20, int(480 / 4), FONT_SIZE, BLACK)
+        draw_text(team2, 400 + int(x / 2) + 20, int(480 / 4),
+                  FONT_SIZE, BLACK)
 
         if current_team2_logo != team2_logo:
             if current_team2_texture:
@@ -185,21 +193,26 @@ def window_logic():
             team2_logo = load_image(team2_logo)
             current_team2_texture = load_texture_from_image(team2_logo)
         if current_team2_texture:
-            draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40, int(480 / 4), WHITE)
+            draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40,
+                         int(480 / 4), WHITE)
 
         for i in range(len(team1_goals)):
             goal_len = measure_text(team1_goals[i], 20)
-            draw_text(team1_goals[i], 400 - int(x / 2) - goal_len - 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1), 20, BLACK)
+            draw_text(team1_goals[i], 400 - int(x / 2) - goal_len - 20,
+                      int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1),
+                      20, BLACK)
 
         for i in range(len(team2_goals)):
             goal_len = measure_text(team2_goals[i], 20)
-            draw_text(team2_goals[i], 400 + int(x / 2) + 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1), 20, BLACK)
+            draw_text(team2_goals[i],
+                      400 + int(x / 2) + 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1),  # noqa: E501
+                      20, BLACK)
 
         draw_date_time()
 
         # Draw the competitions dropdown box
         competitions_str = ";".join(c for c in all_scores.keys())
-        if gui_dropdown_box(Rectangle(20, 20, 200, 20), competitions_str, value, edit_box):
+        if gui_dropdown_box(Rectangle(20, 20, 200, 20), competitions_str, value, edit_box):  # noqa: E501
             edit_box = not edit_box
             game_id[0] = 0
 
@@ -207,7 +220,7 @@ def window_logic():
         competitions_keys = [c for c in all_scores.keys()]
         competition_key = competitions_keys[value[0]]
         days_str = ";".join(c for c in all_scores[competition_key].keys())
-        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, 20), days_str, day_value, day_edit_box):
+        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, 20), days_str, day_value, day_edit_box):  # noqa: E501
             day_edit_box = not day_edit_box
 
         end_drawing()
