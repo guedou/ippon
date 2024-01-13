@@ -65,6 +65,7 @@ def window_logic():
     init_window(800, 480, "ippon")
 
     FONT_SIZE = 30
+    BOX_HEIGHT = 30
 
     edit_box = False
     value = ffi.new("int *")
@@ -113,7 +114,7 @@ def window_logic():
 
         #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
-        gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, 20),
+        gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, BOX_HEIGHT),
                     "%d " % len(games[day_key]), game_id, 1,
                     len(games[day_key]), False)
 
@@ -212,7 +213,7 @@ def window_logic():
 
         # Draw the competitions dropdown box
         competitions_str = ";".join(c for c in all_scores.keys())
-        if gui_dropdown_box(Rectangle(20, 20, 200, 20), competitions_str, value, edit_box):  # noqa: E501
+        if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):  # noqa: E501
             edit_box = not edit_box
             game_id[0] = 0
 
@@ -220,7 +221,7 @@ def window_logic():
         competitions_keys = [c for c in all_scores.keys()]
         competition_key = competitions_keys[value[0]]
         days_str = ";".join(c for c in all_scores[competition_key].keys())
-        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, 20), days_str, day_value, day_edit_box):  # noqa: E501
+        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value, day_edit_box):  # noqa: E501
             day_edit_box = not day_edit_box
 
         end_drawing()
