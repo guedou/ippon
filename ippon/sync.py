@@ -262,6 +262,8 @@ def sync_logic(max):
     for year in years_needed:
         directory = os.path.join(StaticConfiguration.config_data_raw_directory_path, f"{year}")  # noqa: E501
         for date in dates_needed[:max]:
+            if not date.startswith(year):
+                continue
             scores_source = Lequipe(directory)
             if not scores_source.exists(date):
                 print(f"[+] Retrieving {date}")
