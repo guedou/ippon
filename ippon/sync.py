@@ -75,7 +75,7 @@ class Lequipe(object):
 
         # Scorer name
         goal_scorer = None
-        p = re.compile(r"(\w+\. \w+)")
+        p = re.compile(r"((\s?([A-ZÀ-Ÿ]([a-zA-Z\.\-À-ÿ\'])+))+)")
         m = p.search(goals_text)
         if m:
             goal_scorer = m.group(0)
