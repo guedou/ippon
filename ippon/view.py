@@ -42,7 +42,7 @@ def load_scores():
         for games in json.loads(data):
             for game in games:
                 level = game["competition"]["level"]
-                scores[name][level] = scores[name].get(level, []) + [game["teams"]]
+                scores[name][level] = scores[name].get(level, []) + [game["teams"]]  # noqa: E501
 
     return scores
 
@@ -71,7 +71,8 @@ def window_logic():
     value = ffi.new("int *")
 
     day_edit_box = False
-    day_value = ffi.new("int *")
+    day_value = 0
+    day_value_dropbox = ffi.new("int *")
 
     game_id = ffi.new("int *")
 
@@ -110,9 +111,10 @@ def window_logic():
         competitions_keys = [c for c in all_scores.keys()]
         competition_key = competitions_keys[value[0]]
         games = all_scores[competition_key]
-        day_key = [d for d in all_scores[competition_key].keys()][day_value[0]]
+        day_key = [d for d in all_scores[competition_key].keys()][day_value]
 
-        #print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
+        if False:
+            print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))  # noqa: E501
 
         gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, BOX_HEIGHT),
                     "%d " % len(games[day_key]), game_id, 1,
@@ -220,9 +222,19 @@ def window_logic():
         # Draw the days dropdown box
         competitions_keys = [c for c in all_scores.keys()]
         competition_key = competitions_keys[value[0]]
-        days_str = ";".join(c for c in all_scores[competition_key].keys())
-        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value, day_edit_box):  # noqa: E501
+
+        # Adjust the dropbox view
+        tmp_day_value = day_value
+        if tmp_day_value < 5:
+            tmp_day_value = 5
+        min_day_value_dropbox = tmp_day_value - 5
+        max_day_value_dropbox = tmp_day_value + 4
+        day_value_dropbox[0] = day_value - min_day_value_dropbox
+
+        days_str = ";".join([c for c in all_scores[competition_key].keys()][min_day_value_dropbox:max_day_value_dropbox])  # noqa: E501
+        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value_dropbox, day_edit_box):  # noqa: E501
             day_edit_box = not day_edit_box
+            day_value = min_day_value_dropbox + day_value_dropbox[0]
 
         end_drawing()
 
