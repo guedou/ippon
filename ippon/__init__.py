@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0+
 # Guillaume Valadon <guillaume@valadon.net>
 
+import sys
+
 import click
 
 
@@ -11,7 +13,7 @@ def build():
 
 
 @click.command(help="sync scores")
-@click.option("--max", default=-1)
+@click.option("--max", default=sys.maxsize)
 def sync(max):
     from ippon.sync import sync_logic
     sync_logic(max)

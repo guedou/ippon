@@ -1,6 +1,5 @@
 click
-#pyray
 raylib
 cffi
 requests
-bs4
+Pillow

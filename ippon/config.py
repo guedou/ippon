@@ -47,24 +47,6 @@ def generate_directory_structure():
             os.makedirs(directory)
 
 
-def generate_directory_competitions_structure(competition):
-    """
-    Generate the directory structure for competitions
-    """
-    date_start = competition["start"]
-    date_end = competition["end"]
-    year_start = date_start.split("/")[2]
-    year_end = date_end.split("/")[2]
-
-    for year in set([year_start, year_end]):
-        # Create data directories
-        for directory in [StaticConfiguration.config_data_raw_directory_path,
-                          StaticConfiguration.config_data_json_directory_path]:
-            data_directory_path = os.path.join(directory, year)
-            if not os.path.exists(data_directory_path):
-                os.makedirs(data_directory_path)
-
-
 def load_configuation(filename):
 
     if not os.path.exists(filename):
@@ -76,13 +58,17 @@ def load_configuation(filename):
 
     # Check that all sections start with "competition."
     for section in config.sections():
-        if not section.startswith("competition."):
-            raise ValueError(f"Invalid section name: {section}. All sections must start with 'competition.'")  # noqa: E501
+        if section == "core":
+            if "football_data_token" not in config["core"]:
+                raise ValueError("Section core must contain the football_data_token attribute.")
+        else:
+            if not section.startswith("competition."):
+                raise ValueError(f"Invalid section name: {section}. All competitions sections must start with 'competition.'")  # noqa: E501
 
-        # Check that each section contains the name attribute
-        for attribute in ["name", "start", "end"]:
-            if not config.has_option(section, attribute):
-                raise ValueError(f"Section {section} has no {attribute} attribute.")  # noqa: E501
+            # Check that each section contains the name attribute
+            for attribute in ["name", "year", "source", "source_id"]:
+                if not config.has_option(section, attribute):
+                    raise ValueError(f"Section {section} has no {attribute} attribute.")  # noqa: E501
 
     return config
 
@@ -97,10 +83,21 @@ def get_config_competitions(config):
         if section.startswith("competition."):
             competitions.append({"name": config[section]["name"],
                                  "year": config[section]["year"],
-                                 "start": config[section]["start"],
-                                 "end": config[section]["end"]})
-
+                                 "source": config[section].get("source", None),
+                                 "source_id": config[section].get("source_id", None)})  # noqa: E501
     return competitions
+
+
+def get_config_competition_source(config, competition_name):
+    """
+    Return the source of the competition
+    """
+
+    for section in config.sections():
+        if section == f"competition.{competition_name}":
+            return config[section].get("source", None)
+
+    return None
 
 
 def init_config(config_file_path):
@@ -110,9 +107,6 @@ def init_config(config_file_path):
 
     generate_directory_structure()
     config = load_configuation(StaticConfiguration.config_file_path)
-    competitions = get_config_competitions(config)
-    for competition in competitions:
-        generate_directory_competitions_structure(competition)
     return config
 
 
