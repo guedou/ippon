@@ -47,7 +47,8 @@ def sync_logic(max):
                 print(f"[!] Error: {e}")
                 continue
 
-            fd = gzip.open(f"{StaticConfiguration.config_data_raw_directory_path}/{competition["name"]}.json.gz", "wb") # noqa: E501
+            name = competition["name"]
+            fd = gzip.open(f"{StaticConfiguration.config_data_raw_directory_path}/name.json.gz", "wb") # noqa: E501
             fd.write(data)
             fd.close()
 
@@ -86,7 +87,8 @@ def convert(filename):
 
         ippon_match["competition"] = {}
         ippon_match["competition"]["name"] = match["competition"]["name"]
-        ippon_match["competition"]["level"] = f"Jour #{match["matchday"]}"
+        matchday = match["matchday"]
+        ippon_match["competition"]["level"] = f"Jour #{matchday}"
 
         ippon_match["teams"] = []
 
