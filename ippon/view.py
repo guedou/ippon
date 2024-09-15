@@ -55,6 +55,11 @@ def draw_date_time():
 def window_logic():
 
     all_scores = load_scores()
+    if all_scores is None:
+        return
+    if not len(all_scores.keys()):
+        print("No competition found!", file=sys.stderr)
+        return
 
     DRAW_GRID = False
     ROTATE_TIME = time.time()
@@ -68,7 +73,7 @@ def window_logic():
     BOX_HEIGHT = 30
 
     edit_box = False
-    value = ffi.new("int *")
+    competitions_value = ffi.new("int *")
 
     day_edit_box = False
     day_value = 0
@@ -109,7 +114,7 @@ def window_logic():
                 draw_line(i, 0, i, 480, GRAY)
 
         competitions_keys = [c for c in all_scores.keys()]
-        competition_key = competitions_keys[value[0]]
+        competition_key = competitions_keys[competitions_value[0]]
         games = all_scores[competition_key]
         day_key = [d for d in all_scores[competition_key].keys()][day_value]
 
@@ -215,13 +220,13 @@ def window_logic():
 
         # Draw the competitions dropdown box
         competitions_str = ";".join(c for c in all_scores.keys())
-        if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):  # noqa: E501
+        if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, competitions_value, edit_box):  # noqa: E501
             edit_box = not edit_box
             game_id[0] = 0
 
         # Draw the days dropdown box
         competitions_keys = [c for c in all_scores.keys()]
-        competition_key = competitions_keys[value[0]]
+        competition_key = competitions_keys[competitions_value[0]]
 
         # Adjust the dropbox view
         tmp_day_value = day_value
