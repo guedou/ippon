@@ -56,7 +56,7 @@ def sync_logic(max):
 def convert_team(team_name, match, team_key, score_key):
     team = {}
     team[team_name] = {}
-    team[team_name]["name"] = match[team_key]["name"]
+    team[team_name]["name"] = match[team_key]["shortName"]
     team[team_name]["logo"] = match[team_key]["crest"]
     team["score"] = match["score"]["fullTime"][score_key]
     team["rank"] = None
