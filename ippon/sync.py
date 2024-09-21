@@ -48,7 +48,7 @@ def sync_logic(max):
                 continue
 
             name = competition["name"]
-            fd = gzip.open(f"{StaticConfiguration.config_data_raw_directory_path}/name.json.gz", "wb") # noqa: E501
+            fd = gzip.open(f"{StaticConfiguration.config_data_raw_directory_path}/{name}.json.gz", "wb") # noqa: E501
             fd.write(data)
             fd.close()
 
