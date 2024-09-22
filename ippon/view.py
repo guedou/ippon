@@ -54,12 +54,8 @@ def draw_date_time():
 
 def window_logic():
 
-    all_scores = load_scores()
-    if all_scores is None:
-        return
-    if not len(all_scores.keys()):
-        print("No competition found!", file=sys.stderr)
-        return
+    all_scores = None
+    reload_time = None
 
     DRAW_GRID = False
     ROTATE_TIME = time.time()
@@ -89,6 +85,23 @@ def window_logic():
     set_trace_log_level(LOG_NONE)
 
     while not window_should_close():
+
+        if reload_time is not None and (time.time() - reload_time) > 1800:  # noqa: E501
+            all_scores = load_scores()
+            reload_time = time.time()
+            competitions_value[0] = 0
+            day_value = 0
+            game_id[0] = 0
+        elif reload_time is None:
+            all_scores = load_scores()
+            reload_time = time.time()
+
+        if all_scores is None:
+            return
+        if not len(all_scores.keys()):
+            print("No competition found!", file=sys.stderr)
+            return
+
         begin_drawing()
         set_target_fps(10)
 
