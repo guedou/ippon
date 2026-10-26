@@ -74,15 +74,24 @@ def load_configuation(filename):
     config = configparser.ConfigParser()
     config.read(filename)
 
-    # Check that all sections start with "competition."
     for section in config.sections():
+        if section == "core":
+            if not config.has_option(section, "football_data_token"):
+                raise ValueError("Section core has no football_data_token attribute.")
+            continue
         if not section.startswith("competition."):
-            raise ValueError(f"Invalid section name: {section}. All sections must start with 'competition.'")  # noqa: E501
+            raise ValueError(f"Invalid section name: {section}.")
 
-        # Check that each section contains the name attribute
-        for attribute in ["name", "start", "end"]:
+        for attribute in ["name", "year"]:
             if not config.has_option(section, attribute):
-                raise ValueError(f"Section {section} has no {attribute} attribute.")  # noqa: E501
+                raise ValueError(f"Section {section} has no {attribute} attribute.")
+
+        has_dates = all(config.has_option(section, key)
+                        for key in ["start", "end"])
+        has_source = all(config.has_option(section, key)
+                         for key in ["source", "source_id"])
+        if not has_dates and not has_source:
+            raise ValueError(f"Section {section} must define start/end or source/source_id.")
 
     return config
 
@@ -97,8 +106,10 @@ def get_config_competitions(config):
         if section.startswith("competition."):
             competitions.append({"name": config[section]["name"],
                                  "year": config[section]["year"],
-                                 "start": config[section]["start"],
-                                 "end": config[section]["end"]})
+                                 "start": config[section].get("start"),
+                                 "end": config[section].get("end"),
+                                 "source": config[section].get("source"),
+                                 "source_id": config[section].get("source_id")})
 
     return competitions
 
@@ -109,10 +120,11 @@ def init_config(config_file_path):
     """
 
     generate_directory_structure()
-    config = load_configuation(StaticConfiguration.config_file_path)
+    config = load_configuation(config_file_path)
     competitions = get_config_competitions(config)
     for competition in competitions:
-        generate_directory_competitions_structure(competition)
+        if competition["start"] and competition["end"]:
+            generate_directory_competitions_structure(competition)
     return config
 
 

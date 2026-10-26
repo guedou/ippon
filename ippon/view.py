@@ -38,23 +38,32 @@ def load_scores():
         data = fd.read()
         fd.close()
 
-        scores[name] = scores.get(name, {})
+        competition_scores = {}
         for games in json.loads(data):
             for game in games:
                 level = game["competition"]["level"]
-                scores[name][level] = scores[name].get(level, []) + [game["teams"]]  # noqa: E501
+                competition_scores[level] = competition_scores.get(level, []) + [game["teams"]]  # noqa: E501
+        if competition_scores:
+            scores[name] = competition_scores
 
     return scores
 
 
 def draw_date_time():
-    locale.setlocale(locale.LC_TIME, "fr_FR")
+    try:
+        locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+    except locale.Error:
+        pass
     draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK)  # noqa: E501
 
 
 def window_logic():
 
     all_scores = load_scores()
+    if not all_scores:
+        print("No scores available. Run 'ippon sync' and 'ippon build' first.",
+              file=sys.stderr)
+        return
 
     DRAW_GRID = False
     ROTATE_TIME = time.time()
@@ -153,16 +162,16 @@ def window_logic():
             goal_type = ""
             if goal[2]:
                 goal_type = " " + goal[2]
-            goal[1] = goal[1].replace("’", "'")
-            team1_goals.append(goal[0] + " " + goal[1] + goal_type)
+            goal_time = (goal[1] or "").replace("’", "'")
+            team1_goals.append(goal[0] + " " + goal_time + goal_type)
 
         team2_goals = []
         for goal in games[day_key][game_id[0] - 1][1]["goals"]:
             goal_type = ""
             if goal[2]:
                 goal_type = " " + goal[2]
-            goal[1] = goal[1].replace("’", "'")
-            team2_goals.append(goal[0] + " " + goal[1] + goal_type)
+            goal_time = (goal[1] or "").replace("’", "'")
+            team2_goals.append(goal[0] + " " + goal_time + goal_type)
 
         x = measure_text("%+3s - %-3s" % (team1_score, team2_score),
                          FONT_SIZE)
@@ -178,8 +187,11 @@ def window_logic():
             if current_team1_texture:
                 unload_texture(current_team1_texture)
             current_team1_logo = team1_logo
-            team1_logo = load_image(team1_logo)
-            current_team1_texture = load_texture_from_image(team1_logo)
+            current_team1_texture = None
+            if team1_logo:
+                team1_image = load_image(team1_logo)
+                current_team1_texture = load_texture_from_image(team1_image)
+                unload_image(team1_image)
         if current_team1_texture:
             draw_texture(current_team1_texture,
                          400 - int(x / 2) - team1_len - 20 - 40,
@@ -193,8 +205,11 @@ def window_logic():
             if current_team2_texture:
                 unload_texture(current_team2_texture)
             current_team2_logo = team2_logo
-            team2_logo = load_image(team2_logo)
-            current_team2_texture = load_texture_from_image(team2_logo)
+            current_team2_texture = None
+            if team2_logo:
+                team2_image = load_image(team2_logo)
+                current_team2_texture = load_texture_from_image(team2_image)
+                unload_image(team2_image)
         if current_team2_texture:
             draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40,
                          int(480 / 4), WHITE)
@@ -217,6 +232,7 @@ def window_logic():
         competitions_str = ";".join(c for c in all_scores.keys())
         if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):  # noqa: E501
             edit_box = not edit_box
+            day_value = 0
             game_id[0] = 0
 
         # Draw the days dropdown box
@@ -238,4 +254,8 @@ def window_logic():
 
         end_drawing()
 
+    if current_team1_texture:
+        unload_texture(current_team1_texture)
+    if current_team2_texture:
+        unload_texture(current_team2_texture)
     close_window()

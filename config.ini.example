@@ -1,0 +1,11 @@
+# Copy this file to ~/.config/ippon/config.ini, then replace this example
+# section with one section per competition.  The name must exactly match the
+# competition title returned by L'Équipe.
+
+[competition.example]
+name = Competition title
+# Season start year (displayed by `ippon stats`).
+year = 2024
+# Inclusive dates in DD/MM/YYYY format.
+start = 01/08/2024
+end = 31/05/2025

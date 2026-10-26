@@ -43,12 +43,14 @@ class Lequipe(object):
         Retrieve raw results
         """
         url = f"https://www.lequipe.fr/{self.sport}/Directs/{date}"
-        self.content = requests.get(url, headers=self.headers).content
+        response = requests.get(url, headers=self.headers, timeout=20)
+        response.raise_for_status()
+        self.content = response.content
         self.date = date
 
-        fd = gzip.open(f"{self.directory_data}/{self.date}.{self.sport}.html.gz", "w")  # noqa: E501
-        fd.write(self.content)
-        fd.close()
+        filename = f"{self.directory_data}/{self.date}.{self.sport}.html.gz"
+        with gzip.open(filename, "wb") as fd:
+            fd.write(self.content)
 
     def exists(self, date):
         filename = f"{self.directory_data}/{date}.{self.sport}.html.gz"
@@ -60,10 +62,9 @@ class Lequipe(object):
         """
         if self.exists(date):
             filename = f"{self.directory_data}/{date}.{self.sport}.html.gz"
-            fd = gzip.open(filename, "r")
-            self.content = fd.read()
+            with gzip.open(filename, "rb") as fd:
+                self.content = fd.read()
             self.date = date
-            fd.close()
 
     def _football_extract_goal(self, goals_text):
         # Goal type
@@ -145,8 +146,8 @@ class Lequipe(object):
                         team2 = team_score.find("div", class_="MatchScore__team MatchScore__away")  # noqa: E501
                         if not team2:
                             continue
-                        team1_name = re.sub("\s+", " ", team1.find("div", class_="MatchScore__teamName").text)  # noqa: E501,W605
-                        team2_name = re.sub("\s+", " ", team2.find("div", class_="MatchScore__teamName").text)  # noqa: E501,W605
+                        team1_name = re.sub(r"\s+", " ", team1.find("div", class_="MatchScore__teamName").text)  # noqa: E501
+                        team2_name = re.sub(r"\s+", " ", team2.find("div", class_="MatchScore__teamName").text)  # noqa: E501
 
                         # Extract team logos div
                         team1_logo = team_score.find("div", class_="MatchScore__logo--home")  # noqa: E501
@@ -164,8 +165,22 @@ class Lequipe(object):
                         if not team2_logo_img:
                             continue
 
-                        team1_logo_url = "https://" + team1_logo_img.attrs["src"][2:]  # noqa: E501
-                        team2_logo_url = "https://" + team2_logo_img.attrs["src"][2:]  # noqa: E501
+                        team1_logo_src = team1_logo_img.get("src")
+                        team2_logo_src = team2_logo_img.get("src")
+                        if not team1_logo_src or not team2_logo_src:
+                            continue
+                        if team1_logo_src.startswith("//"):
+                            team1_logo_url = "https:" + team1_logo_src
+                        elif team1_logo_src.startswith("/"):
+                            team1_logo_url = "https://www.lequipe.fr" + team1_logo_src
+                        else:
+                            team1_logo_url = team1_logo_src
+                        if team2_logo_src.startswith("//"):
+                            team2_logo_url = "https:" + team2_logo_src
+                        elif team2_logo_src.startswith("/"):
+                            team2_logo_url = "https://www.lequipe.fr" + team2_logo_src
+                        else:
+                            team2_logo_url = team2_logo_src
 
                         # Extract the scores
                         team_scores = []
@@ -177,7 +192,7 @@ class Lequipe(object):
                                 if not team_score:
                                     continue
 
-                                tmp = re.sub("\s+", " ", team_score.text)  # GV: test the returned value  # noqa: E501,W605
+                                tmp = re.sub(r"\s+", " ", team_score.text)  # noqa: E501
                                 team_scores.append(tmp)
 
                         # Process team ranks
@@ -209,8 +224,11 @@ class Lequipe(object):
                         # Competition level
                         p = re.compile(r"(([\w]+,?\s?)+)")
                         m = p.search(competition_level)
-                        if m.groups():
+                        if m:
                             competition_level = m.group(0)
+
+                        if len(team_scores) != 2:
+                            continue
 
                         competitions.append({"sport": self.sport,
                                              "date": self.date,
@@ -228,9 +246,8 @@ def sync_logic(max):
 
     try:
         config = init_config(StaticConfiguration.config_file_path)
-    except FileNotFoundError:
-        print(f"{StaticConfiguration.config_file_path} not found!",
-              file=sys.stderr)
+    except (FileNotFoundError, ValueError) as exc:
+        print(exc, file=sys.stderr)
         return
 
     max_start, max_end = get_competitions_dates(config)
@@ -241,33 +258,27 @@ def sync_logic(max):
     dates_needed = get_all_dates(max_start, max_end)
 
     dates_retrieved = set()
-    for year in [max_start.year, max_end.year]:
-        directory = os.path.join(StaticConfiguration.config_data_raw_directory_path, f"{year}")  # noqa: E501
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            continue
+    years = {date[:4] for date in dates_needed}
+    for year in years:
+        directory = os.path.join(StaticConfiguration.config_data_raw_directory_path, year)
+        os.makedirs(directory, exist_ok=True)
         for filename in os.listdir(directory):
             if filename.endswith(".html.gz"):
-                date = filename.split(".")[0]
-                dates_retrieved.add(date)
+                dates_retrieved.add(filename.split(".", 1)[0])
 
-    dates_needed = list(set(dates_needed) - set(dates_retrieved))
+    dates_needed = sorted(set(dates_needed) - dates_retrieved)
+    dates_to_retrieve = dates_needed if max < 0 else dates_needed[:max]
 
-    years_needed = set()
-    for date in dates_needed:
-        years_needed.add(date[:4])
-
-    dates_needed.sort()
-
-    for year in years_needed:
-        directory = os.path.join(StaticConfiguration.config_data_raw_directory_path, f"{year}")  # noqa: E501
-        for date in dates_needed[:max]:
-            if not date.startswith(year):
-                continue
-            scores_source = Lequipe(directory)
-            if not scores_source.exists(date):
-                print(f"[+] Retrieving {date}")
+    for date in dates_to_retrieve:
+        directory = os.path.join(StaticConfiguration.config_data_raw_directory_path,
+                                 date[:4])
+        scores_source = Lequipe(directory)
+        if not scores_source.exists(date):
+            print(f"[+] Retrieving {date}")
+            try:
                 scores_source.retrieve(date)
+            except requests.RequestException as exc:
+                print(f"[!] Unable to retrieve {date}: {exc}", file=sys.stderr)
 
 
 def build_logic():
@@ -278,9 +289,8 @@ def build_logic():
     # Load the configuration
     try:
         config = init_config(StaticConfiguration.config_file_path)
-    except FileNotFoundError:
-        print(f"{StaticConfiguration.config_file_path} not found!",
-              file=sys.stderr)
+    except (FileNotFoundError, ValueError) as exc:
+        print(exc, file=sys.stderr)
         return
 
     max_start, max_end = get_competitions_dates(config)
@@ -299,6 +309,7 @@ def build_logic():
             filename_json = f"{date}.Football.json.gz"
             directory = os.path.join(StaticConfiguration.config_data_json_directory_path,  # noqa: E501
                                      year)
+            os.makedirs(directory, exist_ok=True)
             filepath_json = os.path.join(directory, filename_json)
             directory = os.path.join(StaticConfiguration.config_data_raw_directory_path,  # noqa: E501
                                      year)
@@ -362,9 +373,8 @@ def logo_logic():
     # Load the configuration
     try:
         config = init_config(StaticConfiguration.config_file_path)
-    except FileNotFoundError:
-        print(f"{StaticConfiguration.config_file_path} not found!",
-              file=sys.stderr)
+    except (FileNotFoundError, ValueError) as exc:
+        print(exc, file=sys.stderr)
         return
 
     competitions = get_config_competitions(config)
@@ -388,7 +398,12 @@ def logo_logic():
                             logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)  # noqa: E501
                             if not os.path.exists(logo_filepath):
                                 print(f"  [+] Downloading {logo_url}")
-                                r = requests.get(logo_url)
-                                fd = open(logo_filepath, "wb")
-                                fd.write(r.content)
-                                fd.close()
+                                try:
+                                    response = requests.get(logo_url, timeout=20)
+                                    response.raise_for_status()
+                                except requests.RequestException as exc:
+                                    print(f"  [!] Unable to download {logo_url}: {exc}",
+                                          file=sys.stderr)
+                                    continue
+                                with open(logo_filepath, "wb") as fd:
+                                    fd.write(response.content)
