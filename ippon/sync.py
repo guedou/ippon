@@ -1,27 +1,27 @@
 # SPDX-License-Identifier: GPL-2.0+
 # Guillaume Valadon <guillaume@valadon.net>
 
-from datetime import datetime
 import gzip
 import hashlib
 import json
 import os
 import re
-import requests
 import sys
+from datetime import datetime
+from typing import ClassVar
 
-from ippon.config import init_config, StaticConfiguration, \
-                         get_config_competitions
-from ippon.utils import get_competitions_dates, get_all_dates
-
+import requests
 from bs4 import BeautifulSoup, Tag
 
+from ippon.config import StaticConfiguration, get_config_competitions, init_config
+from ippon.utils import get_all_dates, get_competitions_dates
 
-class Lequipe(object):
+
+class Lequipe:
     # Retrieved from Firefox
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/117.0',  # noqa: E501
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',  # noqa: E501
+    headers: ClassVar[dict[str, str]] = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/117.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Upgrade-Insecure-Requests': '1',
         'Sec-Fetch-Dest': 'document',
@@ -31,12 +31,11 @@ class Lequipe(object):
         'Connection': 'keep-alive',
     }
 
-    content = None
-    date = None
-
     def __init__(self, directory_data):
         self.directory_data = directory_data
         self.sport = "Football"
+        self.content = None
+        self.date = None
 
     def retrieve(self, date):
         """
@@ -99,7 +98,7 @@ class Lequipe(object):
         for live in soup.find_all("div", class_="Lives__section"):
             for competition in live.find_all("div", class_="Lives__compet"):
 
-                titles = competition.find_all("span", class_="Lives__competTitle")  # noqa: E501
+                titles = competition.find_all("span", class_="Lives__competTitle")
                 if not titles:
                     continue
 
@@ -108,13 +107,13 @@ class Lequipe(object):
                     competition_title = title.find("h3", class_="Lives__title")
                     if not competition_title:
                         continue
-                    competition_level = title.find("span", class_="Lives__competNiveau")  # noqa: E501
+                    competition_level = title.find("span", class_="Lives__competNiveau")
                     if not competition_level:
                         continue
                     competition_title = competition_title.text
                     competition_level = competition_level.text
 
-                    for team_score in competition.find_all("div", class_="TeamScore is-over"):  # noqa: E501
+                    for team_score in competition.find_all("div", class_="TeamScore is-over"):
                         if not type(team_score) is Tag:
                             continue
 
@@ -122,38 +121,38 @@ class Lequipe(object):
                         team1_goals = []
                         team2_goals = []
                         if self.sport == "Football":
-                            tmp_team1_goals = team_score.find("div", class_="TeamScore__goalList is-home")  # noqa: E501
+                            tmp_team1_goals = team_score.find("div", class_="TeamScore__goalList is-home")
                             if not tmp_team1_goals:
                                 continue
-                            tmp_team2_goals = team_score.find("div", class_="TeamScore__goalList is-away")  # noqa: E501
+                            tmp_team2_goals = team_score.find("div", class_="TeamScore__goalList is-away")
                             if not tmp_team2_goals:
                                 continue
 
-                            for goals in tmp_team1_goals.find_all("div", class_="TeamScore__goal"):  # noqa: E501
-                                tmp_goal = self._football_extract_goal(goals.text)  # noqa: E501
+                            for goals in tmp_team1_goals.find_all("div", class_="TeamScore__goal"):
+                                tmp_goal = self._football_extract_goal(goals.text)
                                 if not tmp_goal[0] is None:
                                     team1_goals += [tmp_goal]
 
-                            for goals in tmp_team2_goals.find_all("div", class_="TeamScore__goal"):  # noqa: E501
-                                tmp_goal = self._football_extract_goal(goals.text)  # noqa: E501
+                            for goals in tmp_team2_goals.find_all("div", class_="TeamScore__goal"):
+                                tmp_goal = self._football_extract_goal(goals.text)
                                 if not tmp_goal[0] is None:
                                     team2_goals += [tmp_goal]
 
                         # Extract team names
-                        team1 = team_score.find("div", class_="MatchScore__team MatchScore__home")  # noqa: E501
+                        team1 = team_score.find("div", class_="MatchScore__team MatchScore__home")
                         if not team1:
                             continue
-                        team2 = team_score.find("div", class_="MatchScore__team MatchScore__away")  # noqa: E501
+                        team2 = team_score.find("div", class_="MatchScore__team MatchScore__away")
                         if not team2:
                             continue
-                        team1_name = re.sub(r"\s+", " ", team1.find("div", class_="MatchScore__teamName").text)  # noqa: E501
-                        team2_name = re.sub(r"\s+", " ", team2.find("div", class_="MatchScore__teamName").text)  # noqa: E501
+                        team1_name = re.sub(r"\s+", " ", team1.find("div", class_="MatchScore__teamName").text)
+                        team2_name = re.sub(r"\s+", " ", team2.find("div", class_="MatchScore__teamName").text)
 
                         # Extract team logos div
-                        team1_logo = team_score.find("div", class_="MatchScore__logo--home")  # noqa: E501
+                        team1_logo = team_score.find("div", class_="MatchScore__logo--home")
                         if not team1_logo:
                             continue
-                        team2_logo = team_score.find("div", class_="MatchScore__logo--away")  # noqa: E501
+                        team2_logo = team_score.find("div", class_="MatchScore__logo--away")
                         if not team2_logo:
                             continue
 
@@ -184,15 +183,15 @@ class Lequipe(object):
 
                         # Extract the scores
                         team_scores = []
-                        for match_score in team_score.find_all("div", class_="MatchScore__result"):  # noqa: E501
+                        for match_score in team_score.find_all("div", class_="MatchScore__result"):
                             if not type(match_score) is Tag:
                                 continue
 
-                            for team_score in match_score.find_all("div", class_="MatchScore__score"):  # noqa: E501
+                            for team_score in match_score.find_all("div", class_="MatchScore__score"):
                                 if not team_score:
                                     continue
 
-                                tmp = re.sub(r"\s+", " ", team_score.text)  # noqa: E501
+                                tmp = re.sub(r"\s+", " ", team_score.text)
                                 team_scores.append(tmp)
 
                         # Process team ranks
@@ -232,11 +231,11 @@ class Lequipe(object):
 
                         competitions.append({"sport": self.sport,
                                              "date": self.date,
-                                             "competition": {"name": competition_title, "level": competition_level},  # noqa: E501
-                                             "teams": [{"team1": {"name": teams[0], "logo": team1_logo_url}, "score": team_scores[0],  # noqa: E501
-                                                        "rank": team_ranks[0], "goals": team1_goals},  # noqa: E501
-                                                       {"team2": {"name": teams[1], "logo": team2_logo_url}, "score": team_scores[1],  # noqa: E501
-                                                        "rank": team_ranks[1], "goals": team2_goals}],  # noqa: E501
+                                             "competition": {"name": competition_title, "level": competition_level},
+                                             "teams": [{"team1": {"name": teams[0], "logo": team1_logo_url}, "score": team_scores[0],
+                                                        "rank": team_ranks[0], "goals": team1_goals},
+                                                       {"team2": {"name": teams[1], "logo": team2_logo_url}, "score": team_scores[1],
+                                                        "rank": team_ranks[1], "goals": team2_goals}],
                                              })
 
         return competitions
@@ -251,9 +250,8 @@ def sync_logic(max):
         return
 
     max_start, max_end = get_competitions_dates(config)
-    today = datetime.today()
-    if today < max_end:
-        max_end = today
+    today = datetime.now()
+    max_end = min(max_end, today)
 
     dates_needed = get_all_dates(max_start, max_end)
 
@@ -294,9 +292,8 @@ def build_logic():
         return
 
     max_start, max_end = get_competitions_dates(config)
-    today = datetime.today()
-    if today < max_end:
-        max_end = today
+    today = datetime.now()
+    max_end = min(max_end, today)
 
     dates_needed = get_all_dates(max_start, max_end)
 
@@ -307,21 +304,20 @@ def build_logic():
             year = date[:4]
             filename_html = f"{date}.Football.html.gz"
             filename_json = f"{date}.Football.json.gz"
-            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,  # noqa: E501
+            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,
                                      year)
             os.makedirs(directory, exist_ok=True)
             filepath_json = os.path.join(directory, filename_json)
-            directory = os.path.join(StaticConfiguration.config_data_raw_directory_path,  # noqa: E501
+            directory = os.path.join(StaticConfiguration.config_data_raw_directory_path,
                                      year)
             filepath_html = os.path.join(directory, filename_html)
-            if os.path.exists(filepath_html) and not os.path.exists(filepath_json):  # noqa: E501
+            if os.path.exists(filepath_html) and not os.path.exists(filepath_json):
                 scores_source = Lequipe(directory)
                 scores_source.load(date)
                 competitions = scores_source.parse()
-                if len(competitions):
-                    fd = gzip.open(filepath_json, "w")
-                    fd.write(json.dumps(competitions).encode())
-                    fd.close()
+                if competitions:
+                    with gzip.open(filepath_json, "wb") as fd:
+                        fd.write(json.dumps(competitions).encode())
 
     # Build the competitions JSON files
     competitions = get_config_competitions(config)
@@ -332,18 +328,16 @@ def build_logic():
         for date in dates_needed:
             year = date[:4]
             filename_json = f"{date}.Football.json.gz"
-            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,  # noqa: E501
+            directory = os.path.join(StaticConfiguration.config_data_json_directory_path,
                                      year)
             filepath_json = os.path.join(directory, filename_json)
 
             if not os.path.exists(filepath_json):
                 continue
 
-            fd = gzip.open(filepath_json, "r")
-            data = fd.read()
-            fd.close()
-            competitions = json.loads(data)
-            competitions = [c for c in competitions if c["competition"]["name"] == name]  # noqa: E501
+            with gzip.open(filepath_json, "rb") as fd:
+                competitions = json.loads(fd.read())
+            competitions = [c for c in competitions if c["competition"]["name"] == name]
 
             for competition in competitions:
                 level = competition["competition"]["level"]
@@ -351,18 +345,15 @@ def build_logic():
                 competition_levels[level] += [competition]
 
         competition_data = []
-        for level in competition_levels:
-            level_dates = [int(c["date"]) for c in competition_levels[level]]
-            level_dates.sort()
-            level_date = level_dates[0]
+        for level, level_competitions in competition_levels.items():
+            level_dates = sorted(int(c["date"]) for c in level_competitions)
+            competition_data.append({"date": level_dates[0],
+                                     "data": level_competitions})
 
-            competition_data.append({"date": level_date, "data": competition_levels[level]})  # noqa: E501
-
-        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")  # noqa: E501
+        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")
         competition_data = sorted(competition_data, key=lambda c: c["date"])
-        fd = gzip.open(competition_filepath, "w")
-        fd.write(json.dumps([e["data"] for e in competition_data]).encode())
-        fd.close()
+        with gzip.open(competition_filepath, "wb") as fd:
+            fd.write(json.dumps([e["data"] for e in competition_data]).encode())
 
 
 def logo_logic():
@@ -381,21 +372,19 @@ def logo_logic():
     for competition in competitions:
         name = competition["name"]
         print(f"[+] {name}")
-        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")  # noqa: E501
+        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")
         if not os.path.exists(competition_filepath):
             continue
-        fd = gzip.open(competition_filepath, "r")
-        data = fd.read()
-        fd.close()
-        competitions = json.loads(data)
+        with gzip.open(competition_filepath, "rb") as fd:
+            competitions = json.loads(fd.read())
         for competition in competitions:
             for match in competition:
                 for team in match["teams"]:
                     for team_name in team:
                         if team_name == "team1" or team_name == "team2":
                             logo_url = team[team_name]["logo"]
-                            logo_filename = hashlib.md5(logo_url.encode()).hexdigest() + ".png"  # noqa: E501
-                            logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)  # noqa: E501
+                            logo_filename = hashlib.md5(logo_url.encode()).hexdigest() + ".png"
+                            logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)
                             if not os.path.exists(logo_filepath):
                                 print(f"  [+] Downloading {logo_url}")
                                 try:

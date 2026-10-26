@@ -3,7 +3,6 @@
 
 from setuptools import setup
 
-
 setup(
     name="ippon",
     description="A sports scores display",

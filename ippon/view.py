@@ -9,11 +9,10 @@ import os
 import sys
 import time
 
-from ippon.config import init_config, StaticConfiguration, \
-    get_config_competitions
-
 from cffi import FFI
 from pyray import *
+
+from ippon.config import StaticConfiguration, get_config_competitions, init_config
 
 
 def load_scores():
@@ -31,18 +30,17 @@ def load_scores():
     competitions = get_config_competitions(config)
     for competition in competitions:
         name = competition["name"]
-        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")  # noqa: E501
+        competition_filepath = os.path.join(StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz")
         if not os.path.exists(competition_filepath):
             continue
-        fd = gzip.open(competition_filepath, "r")
-        data = fd.read()
-        fd.close()
+        with gzip.open(competition_filepath, "rb") as fd:
+            data = fd.read()
 
         competition_scores = {}
         for games in json.loads(data):
             for game in games:
                 level = game["competition"]["level"]
-                competition_scores[level] = competition_scores.get(level, []) + [game["teams"]]  # noqa: E501
+                competition_scores[level] = competition_scores.get(level, []) + [game["teams"]]
         if competition_scores:
             scores[name] = competition_scores
 
@@ -54,7 +52,7 @@ def draw_date_time():
         locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
     except locale.Error:
         pass
-    draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK)  # noqa: E501
+    draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK)
 
 
 def window_logic():
@@ -117,16 +115,16 @@ def window_logic():
             for i in range(0, 800, 10):
                 draw_line(i, 0, i, 480, GRAY)
 
-        competitions_keys = [c for c in all_scores.keys()]
+        competitions_keys = [c for c in all_scores]
         competition_key = competitions_keys[value[0]]
         games = all_scores[competition_key]
-        day_key = [d for d in all_scores[competition_key].keys()][day_value]
+        day_key = [d for d in all_scores[competition_key]][day_value]
 
         if False:
-            print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))  # noqa: E501
+            print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
 
         gui_spinner(Rectangle(20 + 200 + 20 + 200 + 20, 20, 200, BOX_HEIGHT),
-                    "%d " % len(games[day_key]), game_id, 1,
+                    f"{len(games[day_key])} ", game_id, 1,
                     len(games[day_key]), False)
 
         if (time.time() - ROTATE_TIME) > ROTATE_DELAY:
@@ -144,14 +142,14 @@ def window_logic():
         team1_logo = games[day_key][game_id[0] - 1][0]["team1"]["logo"]
         team2_logo = games[day_key][game_id[0] - 1][1]["team2"]["logo"]
 
-        logo_filename = hashlib.md5(team1_logo.encode()).hexdigest() + ".png"  # noqa: E501
-        logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)  # noqa: E501
+        logo_filename = hashlib.md5(team1_logo.encode()).hexdigest() + ".png"
+        logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)
         if os.path.exists(logo_filepath):
             team1_logo = logo_filepath
         else:
             team1_logo = None
-        logo_filename = hashlib.md5(team2_logo.encode()).hexdigest() + ".png"  # noqa: E501
-        logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)  # noqa: E501
+        logo_filename = hashlib.md5(team2_logo.encode()).hexdigest() + ".png"
+        logo_filepath = os.path.join(StaticConfiguration.config_logos_directory_path, logo_filename)
         if os.path.exists(logo_filepath):
             team2_logo = logo_filepath
         else:
@@ -173,9 +171,9 @@ def window_logic():
             goal_time = (goal[1] or "").replace("’", "'")
             team2_goals.append(goal[0] + " " + goal_time + goal_type)
 
-        x = measure_text("%+3s - %-3s" % (team1_score, team2_score),
-                         FONT_SIZE)
-        draw_text("%+3s - %-3s" % (team1_score, team2_score),
+        score_text = f"{team1_score:>3} - {team2_score:<3}"
+        x = measure_text(score_text, FONT_SIZE)
+        draw_text(score_text,
                   400 - int(x / 2), int(480 / 4),
                   FONT_SIZE, BLACK)
 
@@ -223,32 +221,31 @@ def window_logic():
         for i in range(len(team2_goals)):
             goal_len = measure_text(team2_goals[i], 20)
             draw_text(team2_goals[i],
-                      400 + int(x / 2) + 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1),  # noqa: E501
+                      400 + int(x / 2) + 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1),
                       20, BLACK)
 
         draw_date_time()
 
         # Draw the competitions dropdown box
-        competitions_str = ";".join(c for c in all_scores.keys())
-        if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):  # noqa: E501
+        competitions_str = ";".join(c for c in all_scores)
+        if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):
             edit_box = not edit_box
             day_value = 0
             game_id[0] = 0
 
         # Draw the days dropdown box
-        competitions_keys = [c for c in all_scores.keys()]
+        competitions_keys = [c for c in all_scores]
         competition_key = competitions_keys[value[0]]
 
         # Adjust the dropbox view
         tmp_day_value = day_value
-        if tmp_day_value < 5:
-            tmp_day_value = 5
+        tmp_day_value = max(tmp_day_value, 5)
         min_day_value_dropbox = tmp_day_value - 5
         max_day_value_dropbox = tmp_day_value + 4
         day_value_dropbox[0] = day_value - min_day_value_dropbox
 
-        days_str = ";".join([c for c in all_scores[competition_key].keys()][min_day_value_dropbox:max_day_value_dropbox])  # noqa: E501
-        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value_dropbox, day_edit_box):  # noqa: E501
+        days_str = ";".join([c for c in all_scores[competition_key]][min_day_value_dropbox:max_day_value_dropbox])
+        if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value_dropbox, day_edit_box):
             day_edit_box = not day_edit_box
             day_value = min_day_value_dropbox + day_value_dropbox[0]
 

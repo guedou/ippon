@@ -6,7 +6,7 @@ import os
 import os.path
 
 
-class StaticConfiguration(object):
+class StaticConfiguration:
     _config_relative_directory_path = ".config/ippon/"
     _config_data_directory_name = "data"
     _config_data_raw_directory_name = "raw"
@@ -23,13 +23,13 @@ class StaticConfiguration(object):
     config_data_directory_path = os.path.join(config_directory_path,
                                               _config_data_directory_name)
     config_data_raw_directory_path = os.path.join(config_data_directory_path,
-                                                  _config_data_raw_directory_name)  # noqa: E501
+                                                  _config_data_raw_directory_name)
     config_data_json_directory_path = os.path.join(config_data_directory_path,
-                                                   _config_data_json_directory_name)  # noqa: E501
+                                                   _config_data_json_directory_name)
     config_competitions_directory_path = os.path.join(config_directory_path,
-                                                      _config_competitions_directory_name)  # noqa: E501
+                                                      _config_competitions_directory_name)
     config_logos_directory_path = os.path.join(config_directory_path,
-                                               _config_logos_directory_name)  # noqa: E501
+                                               _config_logos_directory_name)
 
 
 def generate_directory_structure():
@@ -56,7 +56,7 @@ def generate_directory_competitions_structure(competition):
     year_start = date_start.split("/")[2]
     year_end = date_end.split("/")[2]
 
-    for year in set([year_start, year_end]):
+    for year in {year_start, year_end}:
         # Create data directories
         for directory in [StaticConfiguration.config_data_raw_directory_path,
                           StaticConfiguration.config_data_json_directory_path]:

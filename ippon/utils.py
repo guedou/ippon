@@ -19,19 +19,16 @@ def get_competitions_dates(config):
         start = competition["start"]
         end = competition["end"]
         start = datetime.strptime(start, "%d/%m/%Y")
-        if start < max_start:
-            max_start = start
+        max_start = min(max_start, start)
         end = datetime.strptime(end, "%d/%m/%Y")
-        if end > max_end:
-            max_end = end
+        max_end = max(max_end, end)
 
     return max_start, max_end
 
 
 def get_all_dates(date_start, date_end):
-    today = datetime.today()
-    if today < date_end:
-        date_end = today
+    today = datetime.now()
+    date_end = min(date_end, today)
 
     dates_needed = []
     for i in range((date_end - date_start).days + 1):

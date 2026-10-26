@@ -6,8 +6,7 @@ import json
 import os
 import sys
 
-from ippon.config import init_config, StaticConfiguration, \
-                         get_config_competitions
+from ippon.config import StaticConfiguration, get_config_competitions, init_config
 from ippon.utils import get_all_dates, get_competitions_dates
 
 
@@ -65,8 +64,8 @@ def main(competition):
         print("\n[-] Days")
         print("    Start:   {}".format(max_start.strftime("%d/%m/%Y")))
         print("    End:     {}".format(max_end.strftime("%d/%m/%Y")))
-        print("    Total:   {}".format(len(dates)))
-        print("    Missing: {}".format(len(set(dates) - retrieved_dates)))
+        print(f"    Total:   {len(dates)}")
+        print(f"    Missing: {len(set(dates) - retrieved_dates)}")
 
     if sourced_competitions:
         print("\n[-] football-data")
