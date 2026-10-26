@@ -103,10 +103,10 @@ def window_logic():
     value = ffi.new("int *")
 
     day_edit_box = False
-    day_value = 0
+    day_value = len(next(iter(all_scores.values()))) - 1
     day_value_dropbox = ffi.new("int *")
 
-    game_id = ffi.new("int *")
+    game_id = ffi.new("int *", 1)
 
     current_team1_logo = None
     current_team2_logo = None
@@ -141,10 +141,13 @@ def window_logic():
             for i in range(0, 800, 10):
                 draw_line(i, 0, i, 480, GRAY)
 
-        competitions_keys = [c for c in all_scores]
+        competitions_keys = list(all_scores)
+        value[0] = min(max(value[0], 0), len(competitions_keys) - 1)
         competition_key = competitions_keys[value[0]]
         games = all_scores[competition_key]
-        day_key = [d for d in all_scores[competition_key]][day_value]
+        day_value = min(max(day_value, 0), len(games) - 1)
+        day_key = list(games)[day_value]
+        game_id[0] = min(max(game_id[0], 1), len(games[day_key]))
 
         if False:
             print(value[0], "-", competition_key, "|", day_value[0], "-", day_key, "|", game_id[0], "-", len(games[day_key]))
@@ -153,10 +156,13 @@ def window_logic():
                     f"{len(games[day_key])} ", game_id, 1,
                     len(games[day_key]), False)
 
-        if (time.time() - ROTATE_TIME) > ROTATE_DELAY:
+        if (not edit_box and not day_edit_box
+                and (time.time() - ROTATE_TIME) > ROTATE_DELAY):
             ROTATE_TIME = time.time()
-            game_id[0] += 1
-            game_id[0] %= len(games[day_key])
+            value[0] = (value[0] + 1) % len(competitions_keys)
+            competition_key = competitions_keys[value[0]]
+            day_value = len(all_scores[competition_key]) - 1
+            game_id[0] = 1
 
         # Retrieve game information
         team1 = games[day_key][game_id[0] - 1][0]["team1"]["name"]
@@ -257,8 +263,10 @@ def window_logic():
         competitions_str = ";".join(c for c in all_scores)
         if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):
             edit_box = not edit_box
-            day_value = 0
-            game_id[0] = 0
+            competition_key = competitions_keys[value[0]]
+            day_value = len(all_scores[competition_key]) - 1
+            game_id[0] = 1
+            ROTATE_TIME = time.time()
 
         # Draw the days dropdown box
         competitions_keys = [c for c in all_scores]
@@ -275,6 +283,8 @@ def window_logic():
         if gui_dropdown_box(Rectangle(20 + 200 + 20, 20, 200, BOX_HEIGHT), days_str, day_value_dropbox, day_edit_box):
             day_edit_box = not day_edit_box
             day_value = min_day_value_dropbox + day_value_dropbox[0]
+            game_id[0] = 1
+            ROTATE_TIME = time.time()
 
         end_drawing()
 
