@@ -241,12 +241,115 @@ class Lequipe:
         return competitions
 
 
+def sync_football_data(config, max_competitions):
+    """Synchronize configured competitions from football-data.org."""
+
+    competitions = [competition for competition in get_config_competitions(config)
+                    if competition["source"] == "football-data"]
+    if max_competitions >= 0:
+        competitions = competitions[:max_competitions]
+
+    token = config["core"]["football_data_token"]
+    for competition in competitions:
+        name = competition["name"]
+        print(f"[+] Retrieving {name}")
+        try:
+            response = requests.get(
+                "https://api.football-data.org/v4/competitions/"
+                f"{competition['source_id']}/matches",
+                headers={"X-Auth-Token": token},
+                params={"season": competition["year"]},
+                timeout=20,
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            print(f"[!] Unable to retrieve {name}: {exc}", file=sys.stderr)
+            continue
+
+        filename = os.path.join(
+            StaticConfiguration.config_data_raw_directory_path, f"{name}.json.gz"
+        )
+        with gzip.open(filename, "wb") as fd:
+            fd.write(response.content)
+
+
+def convert_football_data(data):
+    """Convert football-data.org finished matches to the viewer format."""
+
+    matches = []
+    for match in data["matches"]:
+        if match["status"] != "FINISHED":
+            continue
+        home = match["homeTeam"]
+        away = match["awayTeam"]
+        full_time = match["score"]["fullTime"]
+        matches.append({
+            "sport": "Football",
+            "date": datetime.fromisoformat(match["utcDate"]).strftime("%Y%m%d"),
+            "competition": {
+                "name": match["competition"]["name"],
+                "level": f"Jour #{match['matchday']}",
+            },
+            "teams": [
+                {"team1": {"name": home.get("shortName") or home["name"],
+                 "logo": home["crest"]},
+                "score": full_time["home"], "rank": None, "goals": []},
+                {"team2": {"name": away.get("shortName") or away["name"],
+                 "logo": away["crest"]},
+                "score": full_time["away"], "rank": None, "goals": []},
+            ],
+        })
+    return matches
+
+
+def build_football_data(config):
+    """Build viewer files from football-data.org raw responses."""
+
+    for competition in get_config_competitions(config):
+        if competition["source"] != "football-data":
+            continue
+        name = competition["name"]
+        raw_path = os.path.join(
+            StaticConfiguration.config_data_raw_directory_path, f"{name}.json.gz"
+        )
+        if not os.path.exists(raw_path):
+            print(f"[!] {raw_path} not found", file=sys.stderr)
+            continue
+        try:
+            with gzip.open(raw_path, "rt") as fd:
+                matches = convert_football_data(json.load(fd))
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            print(f"[!] Unable to build {name}: {exc}", file=sys.stderr)
+            continue
+
+        matchdays = {}
+        for match in matches:
+            matchdays.setdefault(match["competition"]["level"], []).append(match)
+        output_path = os.path.join(
+            StaticConfiguration.config_competitions_directory_path, f"{name}.json.gz"
+        )
+        with gzip.open(output_path, "wt") as fd:
+            json.dump(list(matchdays.values()), fd)
+        print(f"[+] Built {name}: {len(matches)} matches")
+
+
 def sync_logic(max):
 
     try:
         config = init_config(StaticConfiguration.config_file_path)
     except (FileNotFoundError, ValueError) as exc:
         print(exc, file=sys.stderr)
+        return
+
+    configured_sources = {competition["source"]
+                          for competition in get_config_competitions(config)
+                          if competition["source"]}
+    if configured_sources == {"football-data"}:
+        sync_football_data(config, max)
+        return
+    if configured_sources:
+        sources = ", ".join(sorted(configured_sources))
+        print(f"Unsupported score source: {sources}.", file=sys.stderr)
         return
 
     max_start, max_end = get_competitions_dates(config)
@@ -289,6 +392,17 @@ def build_logic():
         config = init_config(StaticConfiguration.config_file_path)
     except (FileNotFoundError, ValueError) as exc:
         print(exc, file=sys.stderr)
+        return
+
+    configured_sources = {competition["source"]
+                          for competition in get_config_competitions(config)
+                          if competition["source"]}
+    if configured_sources == {"football-data"}:
+        build_football_data(config)
+        return
+    if configured_sources:
+        sources = ", ".join(sorted(configured_sources))
+        print(f"Unsupported score source: {sources}.", file=sys.stderr)
         return
 
     max_start, max_end = get_competitions_dates(config)
