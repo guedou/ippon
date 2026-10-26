@@ -13,6 +13,7 @@ from cffi import FFI
 from pyray import *
 
 from ippon.config import StaticConfiguration, get_config_competitions, init_config
+from ippon.pronote import PronoteService
 from ippon.weather import WeatherService
 
 
@@ -75,6 +76,62 @@ def draw_weather(weather):
             draw_text(line, 20, 480 - 60 + index * 22, 20, BLACK)
 
 
+def shorten_text(text, maximum=32):
+    return text if len(text) <= maximum else f"{text[:maximum - 3]}..."
+
+
+def wrap_text(text, maximum=32, maximum_lines=4):
+    lines = []
+    line = ""
+    for word in text.split():
+        candidate = f"{line} {word}".strip()
+        if len(candidate) > maximum and line:
+            lines.append(line)
+            line = word
+        else:
+            line = candidate
+    if line:
+        lines.append(line)
+    if len(lines) > maximum_lines:
+        lines = lines[:maximum_lines]
+        lines[-1] = f"{shorten_text(lines[-1], maximum - 3)}..."
+    return lines
+
+
+def draw_pronote_compact(snapshot, selected_day):
+    day = snapshot.get("days", {}).get(selected_day)
+    if not day:
+        return
+    draw_text("EMPLOI DU TEMPS", 20, 260, 16, BLACK)
+    for index, lesson in enumerate(day["lessons"]):
+        text = f"{lesson['start']} {lesson['subject']}"
+        draw_text(shorten_text(text), 20, 280 + index * 18, 16, BLACK)
+    homework_lines = []
+    for homework in day["homework"]:
+        text = f"{homework['subject']}: {homework['description']}"
+        homework_lines.extend(wrap_text(text))
+    draw_text("A FAIRE", 410, 260, 16, BLACK)
+    for index, line in enumerate(homework_lines):
+        draw_text(line, 410, 280 + index * 18, 16, BLACK)
+
+
+def draw_pronote(snapshot, selected_day):
+    day = snapshot.get("days", {}).get(selected_day,
+                                        {"lessons": [], "homework": []})
+    draw_text("EMPLOI DU TEMPS", 20, 90, 20, BLACK)
+    draw_text("A FAIRE", 410, 90, 20, BLACK)
+    for index, lesson in enumerate(day["lessons"][:4]):
+        status = " ANNULE" if lesson["canceled"] else ""
+        text = f"{lesson['start']} {lesson['subject']}{status}"
+        draw_text(shorten_text(text), 20, 120 + index * 26, 20, BLACK)
+    homework_y = 120
+    for homework in day["homework"][:3]:
+        text = f"{homework['subject']}: {homework['description']}"
+        for line in wrap_text(text):
+            draw_text(line, 410, homework_y, 20, BLACK)
+            homework_y += 24
+
+
 def window_logic():
 
     all_scores, config = load_scores()
@@ -87,10 +144,15 @@ def window_logic():
         refresh_interval=get_weather_refresh_interval(config)
     )
     weather.refresh()
+    pronote = PronoteService(config) if config.has_section("pronote") else None
+    if pronote:
+        pronote.refresh()
 
     DRAW_GRID = False
     ROTATE_TIME = time.time()
+    LAST_INTERACTION_TIME = time.time()
     ROTATE_DELAY = 10
+    ROTATE_BACKOFF = 30
 
     ffi = FFI()
 
@@ -100,7 +162,7 @@ def window_logic():
     BOX_HEIGHT = 30
 
     edit_box = False
-    value = ffi.new("int *")
+    value = ffi.new("int *", 1 if pronote else 0)
 
     day_edit_box = False
     day_value = len(next(iter(all_scores.values()))) - 1
@@ -117,16 +179,23 @@ def window_logic():
 
     while not window_should_close():
         weather.refresh()
+        if pronote:
+            pronote.refresh()
         begin_drawing()
         set_target_fps(10)
 
         if is_key_pressed(KEY_F):
+            LAST_INTERACTION_TIME = time.time()
             toggle_fullscreen()
 
         if is_key_pressed(KEY_D):
+            LAST_INTERACTION_TIME = time.time()
             DRAW_GRID = ~DRAW_GRID
 
         clear_background(WHITE)
+
+        if is_mouse_button_down(MOUSE_BUTTON_LEFT):
+            LAST_INTERACTION_TIME = time.time()
 
         if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             position = get_mouse_position()
@@ -142,9 +211,58 @@ def window_logic():
                 draw_line(i, 0, i, 480, GRAY)
 
         competitions_keys = list(all_scores)
+        if pronote:
+            competitions_keys.insert(0, "Pronote")
         value[0] = min(max(value[0], 0), len(competitions_keys) - 1)
         competition_key = competitions_keys[value[0]]
+
+        if competition_key == "Pronote":
+            if (not edit_box and not day_edit_box
+                    and (time.time() - LAST_INTERACTION_TIME) > ROTATE_BACKOFF
+                    and (time.time() - ROTATE_TIME) > ROTATE_DELAY):
+                ROTATE_TIME = time.time()
+                value[0] = (value[0] + 1) % len(competitions_keys)
+            pronote_days = list(pronote.snapshot.get("days", {}))
+            if not pronote_days:
+                pronote_days = [time.strftime("%Y-%m-%d")]
+            day_value = min(max(day_value, 0), len(pronote_days) - 1)
+            pronote_day = pronote_days[day_value]
+            draw_pronote(pronote.snapshot, pronote_day)
+            draw_date_time()
+            draw_weather(weather)
+
+            competitions_str = ";".join(competitions_keys)
+            if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT),
+                                competitions_str, value, edit_box):
+                edit_box = not edit_box
+                if competitions_keys[value[0]] == "Pronote":
+                    day_value = 0
+                else:
+                    day_value = len(all_scores[competitions_keys[value[0]]]) - 1
+                ROTATE_TIME = time.time()
+
+            day_value_dropbox[0] = day_value
+            days_str = ";".join(pronote_days)
+            if gui_dropdown_box(Rectangle(240, 20, 200, BOX_HEIGHT), days_str,
+                                day_value_dropbox, day_edit_box):
+                day_edit_box = not day_edit_box
+                day_value = day_value_dropbox[0]
+                ROTATE_TIME = time.time()
+            end_drawing()
+            continue
+
         games = all_scores[competition_key]
+        if (pronote and pronote.snapshot.get("days")
+                and is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
+            position = get_mouse_position()
+            if 280 <= position.y <= 400:
+                value[0] = 0
+                pronote_days = list(pronote.snapshot["days"])
+                today = time.strftime("%Y-%m-%d")
+                day_value = pronote_days.index(today) if today in pronote_days else 0
+                ROTATE_TIME = time.time()
+                end_drawing()
+                continue
         day_value = min(max(day_value, 0), len(games) - 1)
         day_key = list(games)[day_value]
         game_id[0] = min(max(game_id[0], 1), len(games[day_key]))
@@ -157,11 +275,13 @@ def window_logic():
                     len(games[day_key]), False)
 
         if (not edit_box and not day_edit_box
+                and (time.time() - LAST_INTERACTION_TIME) > ROTATE_BACKOFF
                 and (time.time() - ROTATE_TIME) > ROTATE_DELAY):
             ROTATE_TIME = time.time()
             value[0] = (value[0] + 1) % len(competitions_keys)
             competition_key = competitions_keys[value[0]]
-            day_value = len(all_scores[competition_key]) - 1
+            day_value = (0 if competition_key == "Pronote"
+                         else len(all_scores[competition_key]) - 1)
             game_id[0] = 1
 
         # Retrieve game information
@@ -256,6 +376,8 @@ def window_logic():
                       400 + int(x / 2) + 20, int(480 / 4) + FONT_SIZE + FONT_SIZE * (i + 1),
                       20, BLACK)
 
+        if pronote:
+            draw_pronote_compact(pronote.snapshot, pronote.display_date)
         draw_date_time()
         draw_weather(weather)
 
@@ -264,12 +386,19 @@ def window_logic():
         if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):
             edit_box = not edit_box
             competition_key = competitions_keys[value[0]]
-            day_value = len(all_scores[competition_key]) - 1
+            day_value = (0 if competition_key == "Pronote"
+                         else len(all_scores[competition_key]) - 1)
             game_id[0] = 1
             ROTATE_TIME = time.time()
 
+        if competition_key == "Pronote":
+            end_drawing()
+            continue
+
         # Draw the days dropdown box
-        competitions_keys = [c for c in all_scores]
+        competitions_keys = list(all_scores)
+        if pronote:
+            competitions_keys.insert(0, "Pronote")
         competition_key = competitions_keys[value[0]]
 
         # Adjust the dropbox view

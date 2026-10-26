@@ -4,3 +4,4 @@ raylib
 cffi
 requests
 bs4
+pronotepy

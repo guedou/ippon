@@ -8,7 +8,7 @@ setup(
     description="A sports scores display",
     author="Guillaume Valadon",
     author_email="guillaume@valadon.net",
-    version="0.1.1",
+    version="0.1.2",
     packages=["ippon"],
     install_requires=[
         "beautifulsoup4",
@@ -16,6 +16,7 @@ setup(
         "click",
         "raylib",
         "requests",
+        "pronotepy",
     ],
     entry_points={"console_scripts": ["ippon=ippon:main"]},
 )

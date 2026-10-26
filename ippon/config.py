@@ -79,6 +79,11 @@ def load_configuation(filename):
             if not config.has_option(section, "football_data_token"):
                 raise ValueError("Section core has no football_data_token attribute.")
             continue
+        if section == "pronote":
+            for attribute in ["pronote_url", "username", "password", "uuid"]:
+                if not config.has_option(section, attribute):
+                    raise ValueError(f"Section pronote has no {attribute} attribute.")
+            continue
         if not section.startswith("competition."):
             raise ValueError(f"Invalid section name: {section}.")
 
