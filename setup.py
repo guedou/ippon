@@ -8,7 +8,7 @@ setup(
     description="A sports scores display",
     author="Guillaume Valadon",
     author_email="guillaume@valadon.net",
-    version="0.1.0",
+    version="0.1.1",
     packages=["ippon"],
     install_requires=[
         "beautifulsoup4",

@@ -13,6 +13,7 @@ from cffi import FFI
 from pyray import *
 
 from ippon.config import StaticConfiguration, get_config_competitions, init_config
+from ippon.weather import WeatherService
 
 
 def load_scores():
@@ -25,7 +26,7 @@ def load_scores():
     except FileNotFoundError:
         print(f"{StaticConfiguration.config_file_path} not found!",
               file=sys.stderr)
-        return
+        return {}, None
 
     competitions = get_config_competitions(config)
     for competition in competitions:
@@ -44,7 +45,19 @@ def load_scores():
         if competition_scores:
             scores[name] = competition_scores
 
-    return scores
+    return scores, config
+
+
+def get_weather_refresh_interval(config):
+    if not config or not config.has_section("core"):
+        return 15 * 60
+    try:
+        return max(60, config.getint("core", "weather_refresh_seconds",
+                                     fallback=15 * 60))
+    except ValueError:
+        print("Invalid weather_refresh_seconds; using 900 seconds.",
+              file=sys.stderr)
+        return 15 * 60
 
 
 def draw_date_time():
@@ -55,13 +68,25 @@ def draw_date_time():
     draw_text(time.strftime("%a %d %b %Y %H:%M:%S", time.localtime()), 800 - 300, 480 - 40, 20, BLACK)
 
 
+def draw_weather(weather):
+    weather_text = weather.text()
+    if weather_text:
+        for index, line in enumerate(weather_text.splitlines()):
+            draw_text(line, 20, 480 - 60 + index * 22, 20, BLACK)
+
+
 def window_logic():
 
-    all_scores = load_scores()
+    all_scores, config = load_scores()
     if not all_scores:
         print("No scores available. Run 'ippon sync' and 'ippon build' first.",
               file=sys.stderr)
         return
+
+    weather = WeatherService(
+        refresh_interval=get_weather_refresh_interval(config)
+    )
+    weather.refresh()
 
     DRAW_GRID = False
     ROTATE_TIME = time.time()
@@ -91,6 +116,7 @@ def window_logic():
     set_trace_log_level(LOG_NONE)
 
     while not window_should_close():
+        weather.refresh()
         begin_drawing()
         set_target_fps(10)
 
@@ -108,7 +134,7 @@ def window_logic():
                 toggle_fullscreen()
 
         if DRAW_GRID:
-            draw_fps(20, 480 - 40)
+            draw_fps(20, 480 - 100)
             for i in range(0, 480, 10):
                 draw_line(0, i, 800, i, GRAY)
 
@@ -225,6 +251,7 @@ def window_logic():
                       20, BLACK)
 
         draw_date_time()
+        draw_weather(weather)
 
         # Draw the competitions dropdown box
         competitions_str = ";".join(c for c in all_scores)
