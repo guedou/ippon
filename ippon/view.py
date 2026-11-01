@@ -340,15 +340,13 @@ def window_logic():
             current_team1_texture = None
             if team1_logo:
                 team1_image = load_image(team1_logo)
+                image_resize(team1_image, 40, 40)
                 current_team1_texture = load_texture_from_image(team1_image)
                 unload_image(team1_image)
         if current_team1_texture:
-            team1_scale = 40 / max(current_team1_texture.width,
-                                   current_team1_texture.height)
-            draw_texture_ex(current_team1_texture,
-                            Vector2(400 - int(x / 2) - team1_len - 20 - 40,
-                                    int(480 / 4)),
-                            0, team1_scale, WHITE)
+            draw_texture(current_team1_texture,
+                         400 - int(x / 2) - team1_len - 20 - 40,
+                         int(480 / 4), WHITE)
 
         y = measure_text(team2, FONT_SIZE)
         draw_text(team2, 400 + int(x / 2) + 20, int(480 / 4),
@@ -361,15 +359,12 @@ def window_logic():
             current_team2_texture = None
             if team2_logo:
                 team2_image = load_image(team2_logo)
+                image_resize(team2_image, 40, 40)
                 current_team2_texture = load_texture_from_image(team2_image)
                 unload_image(team2_image)
         if current_team2_texture:
-            team2_scale = 40 / max(current_team2_texture.width,
-                                   current_team2_texture.height)
-            draw_texture_ex(current_team2_texture,
-                            Vector2(400 + int(x / 2) + y + 40,
-                                    int(480 / 4)),
-                            0, team2_scale, WHITE)
+            draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40,
+                         int(480 / 4), WHITE)
 
         for i in range(len(team1_goals)):
             goal_len = measure_text(team1_goals[i], 20)
@@ -389,7 +384,7 @@ def window_logic():
         draw_weather(weather)
 
         # Draw the competitions dropdown box
-        competitions_str = ";".join(c for c in all_scores)
+        competitions_str = ";".join(competitions_keys)
         if gui_dropdown_box(Rectangle(20, 20, 200, BOX_HEIGHT), competitions_str, value, edit_box):
             edit_box = not edit_box
             competition_key = competitions_keys[value[0]]
