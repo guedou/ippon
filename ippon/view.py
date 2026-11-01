@@ -343,9 +343,12 @@ def window_logic():
                 current_team1_texture = load_texture_from_image(team1_image)
                 unload_image(team1_image)
         if current_team1_texture:
-            draw_texture(current_team1_texture,
-                         400 - int(x / 2) - team1_len - 20 - 40,
-                         int(480 / 4), WHITE)
+            team1_scale = 40 / max(current_team1_texture.width,
+                                   current_team1_texture.height)
+            draw_texture_ex(current_team1_texture,
+                            Vector2(400 - int(x / 2) - team1_len - 20 - 40,
+                                    int(480 / 4)),
+                            0, team1_scale, WHITE)
 
         y = measure_text(team2, FONT_SIZE)
         draw_text(team2, 400 + int(x / 2) + 20, int(480 / 4),
@@ -361,8 +364,12 @@ def window_logic():
                 current_team2_texture = load_texture_from_image(team2_image)
                 unload_image(team2_image)
         if current_team2_texture:
-            draw_texture(current_team2_texture, 400 + int(x / 2) + y + 40,
-                         int(480 / 4), WHITE)
+            team2_scale = 40 / max(current_team2_texture.width,
+                                   current_team2_texture.height)
+            draw_texture_ex(current_team2_texture,
+                            Vector2(400 + int(x / 2) + y + 40,
+                                    int(480 / 4)),
+                            0, team2_scale, WHITE)
 
         for i in range(len(team1_goals)):
             goal_len = measure_text(team1_goals[i], 20)
