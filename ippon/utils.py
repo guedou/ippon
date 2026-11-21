@@ -16,6 +16,8 @@ def get_competitions_dates(config):
 
     competitions = get_config_competitions(config)
     for competition in competitions:
+        if competition["source"]:
+            continue
         start = competition["start"]
         end = competition["end"]
         start = datetime.strptime(start, "%d/%m/%Y")

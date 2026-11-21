@@ -76,8 +76,6 @@ def load_configuation(filename):
 
     for section in config.sections():
         if section == "core":
-            if not config.has_option(section, "football_data_token"):
-                raise ValueError("Section core has no football_data_token attribute.")
             continue
         if section == "pronote":
             for attribute in ["pronote_url", "username", "password", "uuid"]:
@@ -97,6 +95,11 @@ def load_configuation(filename):
                          for key in ["source", "source_id"])
         if not has_dates and not has_source:
             raise ValueError(f"Section {section} must define start/end or source/source_id.")
+        source = config[section].get("source")
+        if source == "livescore" and config[section].get("source_id") != "68":
+            raise ValueError("LiveScore is supported only for Ligue 1 (source_id = 68).")
+        if source == "football-data" and not config.has_option("core", "football_data_token"):
+            raise ValueError("Section core has no football_data_token attribute.")
 
     return config
 

@@ -13,6 +13,7 @@ from typing import ClassVar
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from ippon import livescore
 from ippon.config import StaticConfiguration, get_config_competitions, init_config
 from ippon.utils import get_all_dates, get_competitions_dates
 
@@ -249,6 +250,8 @@ def sync_football_data(config, max_competitions):
     if max_competitions >= 0:
         competitions = competitions[:max_competitions]
 
+    if not competitions:
+        return
     token = config["core"]["football_data_token"]
     for competition in competitions:
         name = competition["name"]
@@ -271,6 +274,27 @@ def sync_football_data(config, max_competitions):
         )
         with gzip.open(filename, "wb") as fd:
             fd.write(response.content)
+
+
+def sync_livescore(config, max_competitions):
+    """Cache Ligue 1 scores and match incidents together."""
+    competitions = [competition for competition in get_config_competitions(config)
+                    if competition["source"] == "livescore"]
+    if max_competitions >= 0:
+        competitions = competitions[:max_competitions]
+    for competition in competitions:
+        name = competition["name"]
+        print(f"[+] Retrieving {name} (LiveScore)")
+        try:
+            data = livescore.retrieve(competition)
+        except (requests.RequestException, KeyError, TypeError, ValueError) as exc:
+            print(f"[!] Unable to retrieve {name}: {exc}", file=sys.stderr)
+            continue
+        filename = os.path.join(
+            StaticConfiguration.config_data_raw_directory_path, f"{name}.livescore.json.gz"
+        )
+        with gzip.open(filename, "wt") as fd:
+            json.dump(data, fd)
 
 
 def convert_football_data(data):
@@ -303,21 +327,25 @@ def convert_football_data(data):
 
 
 def build_football_data(config):
-    """Build viewer files from football-data.org raw responses."""
+    """Build viewer files from configured JSON score providers."""
 
     for competition in get_config_competitions(config):
-        if competition["source"] != "football-data":
+        source = competition["source"]
+        if source not in {"football-data", "livescore"}:
             continue
         name = competition["name"]
+        suffix = ".livescore" if source == "livescore" else ""
         raw_path = os.path.join(
-            StaticConfiguration.config_data_raw_directory_path, f"{name}.json.gz"
+            StaticConfiguration.config_data_raw_directory_path, f"{name}{suffix}.json.gz"
         )
         if not os.path.exists(raw_path):
             print(f"[!] {raw_path} not found", file=sys.stderr)
             continue
         try:
             with gzip.open(raw_path, "rt") as fd:
-                matches = convert_football_data(json.load(fd))
+                data = json.load(fd)
+                matches = (livescore.convert(data, competition) if source == "livescore"
+                           else convert_football_data(data))
         except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             print(f"[!] Unable to build {name}: {exc}", file=sys.stderr)
             continue
@@ -344,13 +372,19 @@ def sync_logic(max):
     configured_sources = {competition["source"]
                           for competition in get_config_competitions(config)
                           if competition["source"]}
-    if configured_sources == {"football-data"}:
-        sync_football_data(config, max)
+    unsupported = configured_sources - {"football-data", "livescore"}
+    if unsupported:
+        print(f"Unsupported score source: {', '.join(sorted(unsupported))}.", file=sys.stderr)
         return
     if configured_sources:
-        sources = ", ".join(sorted(configured_sources))
-        print(f"Unsupported score source: {sources}.", file=sys.stderr)
-        return
+        sync_livescore(config, max)
+        count = sum(c["source"] == "livescore" for c in get_config_competitions(config))
+        remaining = -1 if max < 0 else max - min(max, count)
+        sync_football_data(config, remaining)
+        if all(c["source"] for c in get_config_competitions(config)):
+            return
+        count = sum(c["source"] == "football-data" for c in get_config_competitions(config))
+        max = -1 if remaining < 0 else remaining - min(remaining, count)
 
     max_start, max_end = get_competitions_dates(config)
     today = datetime.now()
@@ -397,13 +431,14 @@ def build_logic():
     configured_sources = {competition["source"]
                           for competition in get_config_competitions(config)
                           if competition["source"]}
-    if configured_sources == {"football-data"}:
-        build_football_data(config)
+    unsupported = configured_sources - {"football-data", "livescore"}
+    if unsupported:
+        print(f"Unsupported score source: {', '.join(sorted(unsupported))}.", file=sys.stderr)
         return
     if configured_sources:
-        sources = ", ".join(sorted(configured_sources))
-        print(f"Unsupported score source: {sources}.", file=sys.stderr)
-        return
+        build_football_data(config)
+        if all(c["source"] for c in get_config_competitions(config)):
+            return
 
     max_start, max_end = get_competitions_dates(config)
     today = datetime.now()
@@ -436,6 +471,8 @@ def build_logic():
     # Build the competitions JSON files
     competitions = get_config_competitions(config)
     for competition in competitions:
+        if competition["source"]:
+            continue
         name = competition["name"]
         print(f"[+] {name}")
         competition_levels = {}

@@ -1,11 +1,23 @@
-# Copy this file to ~/.config/ippon/config.ini, then replace this example
-# section with one section per competition.  The name must exactly match the
-# competition title returned by L'Équipe.
+# Copy this file to ~/.config/ippon/config.ini.
+# LiveScore is used only for Ligue 1; set year to the current season's start year.
+[competition.ligue1]
+name = Ligue 1
+year = 2026
+source = livescore
+source_id = 68
 
-[competition.example]
-name = Competition title
-# Season start year (displayed by `ippon stats`).
-year = 2024
-# Inclusive dates in DD/MM/YYYY format.
-start = 01/08/2024
-end = 31/05/2025
+# Other competitions can keep using L'Équipe (name must match its title).
+# [competition.example]
+# name = Competition title
+# year = 2026
+# start = 01/08/2026
+# end = 31/05/2027
+
+# Or use football-data.org, with a token in [core].
+# [core]
+# football_data_token = YOUR_TOKEN
+# [competition.premierleague]
+# name = Premier League
+# year = 2026
+# source = football-data
+# source_id = PL
