@@ -51,6 +51,30 @@ weather_refresh_seconds = 900
 
 The default is 900 seconds (15 minutes); the minimum is 60 seconds.
 
+## Launcher logs
+
+`launcher.sh` uses `.venv/bin/python` from its own project directory and saves
+stdout and stderr to a separate file for each run in `~/.config/ippon/logs/`.
+It no longer requires the project to be installed at `/home/ippon/ippon.git`.
+Logs belong to the account running the launcher (for a systemd service, its
+`User=` account). `latest.log` points to the most recent run.
+
+```shell
+./launcher.sh
+# From another terminal:
+tail -F ~/.config/ippon/logs/latest.log
+```
+
+Logs include Python tracebacks, unbuffered output, start/stop timestamps and
+the application's exit status. Python's fault handler is enabled to provide
+stack traces for native crashes such as segmentation faults. A forced kill
+(`SIGKILL`) or power loss cannot produce a final traceback or stop timestamp.
+When launched by systemd, output also remains available through
+`journalctl -u <service-name>`; the launcher no longer uses `systemd-cat`.
+
+Logs are private to the launching user and retained until manually deleted.
+They may contain personal information: review them before sharing.
+
 ## Usage
 
 ```shell
