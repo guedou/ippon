@@ -133,14 +133,24 @@ requires `--demo`. `--frames N` exits after N rendered frames; use it with
 On macOS, a desktop session is required for the native window, including when
 capturing a screenshot. Pi display, rotation and touch still require an actual
 device test; macOS is suitable for navigation and layout development.
-On Raspberry Pi hardware, the viewer starts in borderless fullscreen by default.
-Other computers, including macOS and ordinary Linux desktops, start in a window.
-Use `--fullscreen` or `--windowed` to override this choice. Fullscreen uses the
-current desktop geometry: it does not request a different resolution or change
-rotation. For a HyperPixel already configured as an 800×480 rotated X11 desktop,
-keep that system configuration. Native displays already running fullscreen stay
-in their native mode. A raylib build without borderless support keeps its window
-and logs a warning instead of switching to an exclusive video mode.
+On Raspberry Pi hardware, the viewer requests fullscreen by default. Other
+computers, including macOS and ordinary Linux desktops, start in a window.
+Use `--fullscreen` or `--windowed` to override this choice. The viewer first tries
+borderless mode and checks the resulting raylib flags. If the backend does not
+activate it, the viewer falls back to the classic fullscreen toggle used by the
+original application. That fallback may use an exclusive fullscreen mode;
+Ippon does not claim success unless raylib reports fullscreen or borderless.
+If neither API works, it keeps the window and logs a warning. A native display
+already fullscreen at startup is left unchanged; its fullscreen control is
+disabled. The application does not configure display rotation. For a HyperPixel
+already configured as an 800×480 rotated X11 desktop, keep that configuration.
+The dashboard retains its logical 800×480 canvas in every mode.
+
+Controls activate once on the initial press, as in the original viewer; holding
+a finger does not repeat the action. The rendering loop targets 30 frames/s
+instead of the previous 10; actual performance still depends on the Pi and its
+graphics backend. Successful display changes request focus once to reduce presses used only to
+activate the window.
 
 The desktop window can be resized while preserving the canvas aspect ratio.
 Keyboard shortcuts: `F` toggles fullscreen, `Esc` goes back, and `Q` exits.

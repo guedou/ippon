@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 — 2026-11-22
+
+- Activate buttons on the mouse press event, as in the original viewer, without
+  depending on a later release or its coordinates.
+- Verify fullscreen state after each mode change; fall back to the original
+  fullscreen function when borderless mode is unavailable or has no effect.
+- Show the actual fullscreen state in Options and disable switching on displays
+  that are already running in native fullscreen mode.
+
 ## 0.2.1 — 2026-11-22
 
 - Use a single raylib pointer stream for touchscreen taps and mouse clicks.

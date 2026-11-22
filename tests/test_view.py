@@ -68,84 +68,70 @@ class PointerTests(unittest.TestCase):
         self.buttons = [((0, 0, 100, 80), 'nav', 'home', False),
                         ((100, 0, 100, 80), 'nav', 'school', False)]
 
-    def update(self, x, down, y=40, buttons=None):
-        return self.pointer.update((x, y), down,
-                                   self.buttons if buttons is None else buttons)
-
-    def test_only_release_activates_once(self):
-        self.assertIsNone(self.update(40, True))
-        self.assertIsNone(self.update(41, True))
-        self.assertEqual(self.update(41, False), ('nav', 'home'))
-        self.assertIsNone(self.update(41, False))
-
-    def test_movement_first_observed_on_release_cancels_click(self):
-        self.update(20, True)
-        self.assertIsNone(self.update(70, False))
-        self.update(20, True)
-        self.assertEqual(self.update(20, False), ('nav', 'home'))
-
-    def test_release_on_different_target_does_not_activate(self):
-        self.update(95, True)
-        self.assertIsNone(self.update(105, False))
-
-    def test_drag_remains_cancelled_after_return_to_origin(self):
-        self.update(30, True)
-        self.update(60, True)
-        self.update(30, True)
-        self.assertIsNone(self.update(30, False))
-        # A cancelled gesture must not poison the following tap.
-        self.update(30, True)
-        self.assertEqual(self.update(30, False), ('nav', 'home'))
-
-    def test_small_drift_inside_button_is_a_tap_but_larger_drag_is_cancelled(self):
-        for drift, activates in ((20, True), (24, True), (25, False)):
-            with self.subTest(drift=drift):
-                pointer = PointerTracker()
-                self.assertIsNone(pointer.update((30, 40), True, self.buttons))
-                self.assertIsNone(pointer.update((30 + drift, 40), True, self.buttons))
-                action = pointer.update((30 + drift, 40), False, self.buttons)
-                self.assertEqual(action, ('nav', 'home') if activates else None)
-
-    def test_short_press_and_release_edges_activate_once_even_when_down_is_false(self):
-        action = self.pointer.update((40, 40), False, self.buttons,
-                                     pressed=True, released=True)
-        self.assertEqual(action, ('nav', 'home'))
-        self.assertFalse(self.pointer.down)
+    def test_press_activates_immediately_and_hold_or_release_never_repeats(self):
+        self.assertEqual(self.pointer.update((40, 40), True, self.buttons, pressed=True),
+                         ('nav', 'home'))
+        self.assertIsNone(self.pointer.update((40, 40), True, self.buttons))
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons, released=True))
         self.assertIsNone(self.pointer.update((40, 40), False, self.buttons))
 
-    def test_short_press_release_on_disabled_button_does_not_activate(self):
-        buttons = [((0, 0, 100, 80), 'match-next', None, True)]
-        self.assertIsNone(self.pointer.update((40, 40), False, buttons,
-                                              pressed=True, released=True))
+    def test_motion_and_wrong_release_coordinates_cannot_retarget_press(self):
+        self.assertEqual(self.pointer.update((20, 40), True, self.buttons, pressed=True),
+                         ('nav', 'home'))
+        self.assertIsNone(self.pointer.update((150, 40), True, self.buttons))
+        self.assertIsNone(self.pointer.update((150, 40), False, self.buttons, released=True))
 
-    def test_crossing_another_target_cancels_even_short_excursion(self):
-        self.update(95, True)
-        self.update(105, True)
-        self.update(95, True)
-        self.assertIsNone(self.update(95, False))
+    def test_new_press_is_not_gated_by_missing_previous_release(self):
+        self.assertEqual(self.pointer.update((20, 40), True, self.buttons, pressed=True),
+                         ('nav', 'home'))
+        # Backend never delivered an up state between these explicit presses.
+        self.assertEqual(self.pointer.update((150, 40), True, self.buttons, pressed=True),
+                         ('nav', 'school'))
 
-    def test_disabled_button_never_activates(self):
-        buttons = [((0, 0, 100, 80), 'match-next', None, True)]
-        self.update(20, True, buttons=buttons)
-        self.assertIsNone(self.update(20, False, buttons=buttons))
+    def test_down_state_without_press_edge_is_not_a_click(self):
+        self.assertIsNone(self.pointer.update((40, 40), True, self.buttons))
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons, released=True))
 
-    def test_target_removed_or_disabled_before_release_does_not_activate(self):
-        self.update(20, True)
-        self.assertIsNone(self.update(20, False, buttons=[]))
-        self.update(20, True)
+    def test_press_outside_then_drag_inside_does_not_activate(self):
+        self.assertIsNone(self.pointer.update((-2, 40), True, self.buttons, pressed=True))
+        self.assertIsNone(self.pointer.update((40, 40), True, self.buttons))
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons, released=True))
+
+    def test_short_press_edge_activates_even_when_down_is_false(self):
+        self.assertEqual(self.pointer.update((40, 40), False, self.buttons, pressed=True),
+                         ('nav', 'home'))
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons, released=True))
+
+    def test_short_press_release_edges_activate_once(self):
+        self.assertEqual(self.pointer.update((40, 40), False, self.buttons,
+                                             pressed=True, released=True), ('nav', 'home'))
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons))
+
+    def test_disabled_button_never_activates_or_activates_on_later_enable(self):
         disabled = [((0, 0, 100, 80), 'nav', 'home', True)]
-        self.assertIsNone(self.update(20, False, buttons=disabled))
+        self.assertIsNone(self.pointer.update((20, 40), True, disabled, pressed=True))
+        self.assertIsNone(self.pointer.update((20, 40), True, self.buttons))
+        self.assertIsNone(self.pointer.update((20, 40), False, self.buttons, released=True))
+        self.assertEqual(self.pointer.update((20, 40), True, self.buttons, pressed=True),
+                         ('nav', 'home'))
 
-    def test_tap_must_start_inside_a_target(self):
-        self.update(-2, True)
-        self.assertIsNone(self.update(3, False))
-        self.assertIsNone(self.update(100, True, y=80))
-        self.assertIsNone(self.update(100, False, y=80))
+    def test_removed_or_changed_target_during_hold_does_not_create_another_action(self):
+        self.assertEqual(self.pointer.update((20, 40), True, self.buttons, pressed=True),
+                         ('nav', 'home'))
+        self.assertIsNone(self.pointer.update((20, 40), True, []))
+        replacement = [((0, 0, 100, 80), 'choose', 'replacement', False)]
+        self.assertIsNone(self.pointer.update((20, 40), True, replacement))
+        self.assertIsNone(self.pointer.update((20, 40), False, replacement, released=True))
 
-    def test_touch_on_topmost_control_does_not_activate_underlying_control(self):
+    def test_press_on_topmost_control_does_not_activate_underlying_control(self):
         buttons = self.buttons + [((20, 0, 50, 80), 'choose', 'selection', False)]
-        self.update(30, True, buttons=buttons)
-        self.assertEqual(self.update(30, False, buttons=buttons), ('choose', 'selection'))
+        self.assertEqual(self.pointer.update((30, 40), True, buttons, pressed=True),
+                         ('choose', 'selection'))
+
+    def test_hit_bounds_are_half_open(self):
+        self.assertIsNone(self.pointer.update((100, 80), True, self.buttons, pressed=True))
+        self.assertEqual(self.pointer.update((100, 40), True, self.buttons, pressed=True),
+                         ('nav', 'school'))
 
 
 class TextTests(unittest.TestCase):
@@ -483,13 +469,12 @@ class ViewerTests(unittest.TestCase):
                                  if len(args) >= 2 and args[0] == 36
                                  and 140 <= args[1] <= 290)
         self.assertNotIn('08:30', hero_content)
-        # Activate the drawn hero through the same release tracker as the UI.
+        # Activate the drawn hero at the same press edge as the UI.
         hero = next(button for button in self.painter.buttons if button[1] == 'home-school')
         x, y, width, height = hero[0]
         point = (x + width / 2, y + height / 2)
         pointer = PointerTracker()
-        self.assertIsNone(pointer.update(point, True, self.painter.buttons))
-        action = pointer.update(point, False, self.painter.buttons)
+        action = pointer.update(point, True, self.painter.buttons, pressed=True)
         self.assertEqual(action, ('home-school', None))
         with patch('ippon.view.date', wraps=date) as calendar:
             calendar.today.return_value = date(2026, 11, 22)
@@ -666,6 +651,22 @@ class ViewerTests(unittest.TestCase):
         viewer.dispatch('auto-off')
         self.assertEqual(viewer.state.auto, 'off')
 
+    def test_fullscreen_options_describe_current_state_and_disable_native_screen_action(self):
+        viewer = self.viewer
+        viewer.state.navigate('options')
+        for enabled, available, label in ((False, True, 'Plein écran'),
+                                          (True, True, 'Quitter le plein écran'),
+                                          (True, False, 'Écran natif')):
+            with self.subTest(enabled=enabled, available=available):
+                viewer.fullscreen = enabled
+                viewer.fullscreen_available = available
+                self.assertIn(label, self.draw())
+                button = next(button for button in self.painter.buttons if button[1] == 'fullscreen')
+                self.assertEqual(button[3], not available)
+                pointer = PointerTracker()
+                action = pointer.update((668, 88), True, self.painter.buttons, pressed=True)
+                self.assertEqual(action, ('fullscreen', None) if available else None)
+
     def test_disappearing_match_closes_goal_detail_instead_of_claiming_zero_goals(self):
         viewer = self.viewer
         viewer.dispatch('nav', 'football')
@@ -840,7 +841,7 @@ class WindowCoordinateTests(unittest.TestCase):
         rl.get_render_width.assert_not_called()
         rl.get_render_height.assert_not_called()
 
-    def test_letterboxed_window_maps_release_to_logical_touch_target(self):
+    def test_letterboxed_window_maps_press_to_logical_touch_target(self):
         """Exercise production transform through its event loop, not a copy of it."""
         painter = FakePainter()
         viewer = Viewer(painter, demo=True)
@@ -945,7 +946,7 @@ class WindowCoordinateTests(unittest.TestCase):
         self.assertEqual(viewer.state.page, 'school')
         viewer.dispatch.assert_called_once_with('nav', 'school')
 
-    def test_removing_pressed_control_during_refresh_cancels_activation(self):
+    def test_control_removed_by_refresh_before_press_is_not_activated(self):
         painter = FakePainter()
         viewer = Viewer(painter, demo=True)
         viewer.dispatch = Mock(wraps=viewer.dispatch)
@@ -957,18 +958,125 @@ class WindowCoordinateTests(unittest.TestCase):
 
         def redraw_without_school_navigation():
             original_draw()
-            if frame[0] >= 2:
+            if frame[0] >= 1:
                 painter.buttons[:] = [button for button in painter.buttons
                                       if button[1:3] != ('nav', 'school')]
 
         viewer.draw = redraw_without_school_navigation
-        viewer.refresh = lambda: frame[0] == 2
+        viewer.refresh = lambda: frame[0] == 1
         with patch.dict(sys.modules, {'pyray': rl}), \
                 patch('ippon.view.Painter', return_value=painter), \
                 patch('ippon.view.Viewer', return_value=viewer):
             window_logic(demo=True, fullscreen=False, frames=4)
         self.assertEqual(viewer.state.page, 'home')
         viewer.dispatch.assert_not_called()
+
+    def test_fullscreen_activates_on_press_once_without_any_release(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.state.navigate('options')
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.get_mouse_position = lambda: SimpleNamespace(x=1336, y=196)
+        rl.is_mouse_button_down = lambda button: frame[0] >= 1
+        rl.is_mouse_button_released = lambda button: False
+        toggled_at = []
+        display = SimpleNamespace(enabled=False, can_toggle=True, error=None,
+                                  last_error=None, start=Mock())
+
+        def toggle():
+            toggled_at.append(frame[0])
+            display.enabled = not display.enabled
+            return True
+
+        display.toggle = Mock(side_effect=toggle)
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer), \
+                patch('ippon.view.DisplayMode', return_value=display):
+            window_logic(demo=True, fullscreen=False, frames=5)
+        self.assertEqual(toggled_at, [1])
+        display.toggle.assert_called_once_with()
+        self.assertTrue(viewer.fullscreen)
+        self.assertTrue(viewer.fullscreen_available)
+        self.assertIn('Quitter le plein écran', painter.texts)
+
+    def test_failed_fullscreen_press_reports_failure_without_waiting_for_release(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.state.navigate('options')
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.get_mouse_position = lambda: SimpleNamespace(x=1336, y=196)
+        rl.is_mouse_button_down = lambda button: frame[0] >= 1
+        rl.is_mouse_button_released = lambda button: False
+        display = SimpleNamespace(enabled=False, can_toggle=True, start=Mock(),
+                                  toggle=Mock(return_value=False))
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer), \
+                patch('ippon.view.DisplayMode', return_value=display):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        display.toggle.assert_called_once_with()
+        self.assertFalse(viewer.fullscreen)
+        self.assertTrue(viewer.fullscreen_available)
+        self.assertEqual(viewer.display_error, 'Échec du changement')
+        self.assertIn('Échec du changement', painter.texts)
+
+    def test_held_navigation_does_not_activate_new_controls_under_same_finger(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        # Home's Football card and Football's Buteurs button overlap here.
+        rl.get_mouse_position = lambda: SimpleNamespace(x=1200, y=680)
+        rl.is_mouse_button_down = lambda button: frame[0] >= 1
+        rl.is_mouse_button_released = lambda button: False
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=5)
+        self.assertEqual(viewer.state.page, 'football')
+        self.assertIsNone(viewer.state.detail)
+        viewer.dispatch.assert_called_once_with('home-football', None)
+
+    def test_wrong_release_coordinates_do_not_undo_or_retarget_press(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        original_dispatch = viewer.dispatch
+        frame = [0]
+        dispatched_at = []
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.get_mouse_position = lambda: SimpleNamespace(x=1100, y=880) if frame[0] < 2 else SimpleNamespace(x=0, y=0)
+
+        def dispatch(*action):
+            dispatched_at.append((frame[0], action))
+            original_dispatch(*action)
+
+        viewer.dispatch = dispatch
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        self.assertEqual(dispatched_at, [(1, ('nav', 'school'))])
+        self.assertEqual(viewer.state.page, 'school')
+
+    def test_press_outside_then_drag_into_button_does_not_activate(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.get_mouse_position = lambda: SimpleNamespace(x=-20, y=0) if frame[0] <= 1 else SimpleNamespace(x=1100, y=880)
+        rl.is_mouse_button_down = lambda button: frame[0] in (1, 2)
+        rl.is_mouse_button_released = lambda button: frame[0] == 3
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        viewer.dispatch.assert_not_called()
+        self.assertEqual(viewer.state.page, 'home')
 
     def test_high_dpi_window_flag_is_only_enabled_on_macos(self):
         for platform in ('linux', 'darwin'):

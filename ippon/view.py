@@ -95,41 +95,21 @@ def contains(box, point):
 
 
 class PointerTracker:
-    """One activation on release, cancelled by a drag or a different target."""
+    """Hit-test each raylib press once; holding only controls visual feedback.
+
+    Match main's IsMouseButtonPressed behaviour. A missing release or a jump
+    in release coordinates must not prevent the next genuine press.
+    """
     def __init__(self):
         self.down = False
-        self.start = None
         self.target = None
-        self.cancelled = False
 
     def update(self, point, down, buttons, pressed=False, released=False):
-        # Preserve a short tap when the backend reports both edges in one
-        # frame. Events already discarded by raylib cannot be reconstructed.
-        if pressed and released and not self.down:
-            self.update(point, True, buttons)
-            return self.update(point, False, buttons)
-        if released:
-            down = False
-        elif pressed:
-            down = True
         hit = next((b for b in reversed(buttons)
                     if not b[3] and contains(b[0], point)), None)
-        result = None
-        if down and not self.down:
-            self.start = point
-            self.target = hit
-            self.cancelled = False
-        if self.start is not None and (down or self.down):
-            self.cancelled |= math.dist(self.start, point) > 24
-            if self.target is not None and (hit is None or hit[1:3] != self.target[1:3]):
-                self.cancelled = True
-        if self.down and not down:
-            if (not self.cancelled and self.target is not None and hit is not None
-                    and hit[1:3] == self.target[1:3]):
-                result = hit[1:3]
-            self.start = self.target = None
-        self.down = down
-        return result
+        self.down = bool(down and not released)
+        self.target = hit if self.down else None
+        return hit[1:3] if pressed and hit is not None else None
 
 
 class Painter:
@@ -324,6 +304,9 @@ class Viewer:
         self.state = NavigationState()
         self.services = {}
         self.config_error = None
+        self.fullscreen = False
+        self.fullscreen_available = True
+        self.display_error = None
         self.data = {'football': {'competitions': {}}, 'school': {'days': {}}, 'weather': None}
         self.statuses = {}
         self._detail_snapshot = None
@@ -738,7 +721,11 @@ class Viewer:
     def draw_options(self):
         p,s=self.p,self.state
         self.heading('Options',back=False)
-        p.button((552,48,232,80),'Plein écran','fullscreen')
+        label = ('Écran natif' if not self.fullscreen_available else
+                 'Quitter le plein écran' if self.fullscreen else 'Plein écran')
+        p.button((552,48,232,80),label,'fullscreen',
+                 disabled=not self.fullscreen_available,
+                 sub='Plein écran actif' if not self.fullscreen_available else self.display_error)
         p.card((16,136,768,160))
         for index,(label,sub,action,on) in enumerate((
             ('Rotation automatique','En pause · reprendre' if s.auto=='paused' else 'Activée' if s.auto=='running' else 'Arrêtée · activer','auto',s.auto!='off'),
@@ -866,17 +853,25 @@ def window_logic(demo=False,demo_scenario='normal',fullscreen=None,screenshot=No
             raise RuntimeError('Impossible de créer le canevas graphique.')
         rl.set_texture_filter(target.texture,rl.TEXTURE_FILTER_BILINEAR)
         viewer=Viewer(painter,demo,demo_scenario)
+        viewer.fullscreen = display.enabled
+        viewer.fullscreen_available = display.can_toggle
+
+        def toggle_display():
+            changed = display.toggle()
+            viewer.fullscreen = display.enabled
+            viewer.fullscreen_available = display.can_toggle
+            viewer.display_error = (None if changed or not display.can_toggle
+                                    else 'Échec du changement')
+
         pointer=PointerTracker()
         dirty=True;clock=None;count=0
         while not rl.window_should_close():
             if rl.is_key_pressed(rl.KEY_Q):
                 break
             if rl.is_key_pressed(rl.KEY_F):
-                viewer.state.interact();display.toggle();dirty=True
-                pointer.cancelled = True
+                viewer.state.interact();toggle_display();dirty=True
             if rl.is_key_pressed(rl.KEY_ESCAPE):
                 viewer.state.interact();viewer.state.back();dirty=True
-                pointer.cancelled = True
             width,height=rl.get_screen_width(),rl.get_screen_height()
             scale=max(.01,min(width/WIDTH,height/HEIGHT))
             ox,oy=(width-WIDTH*scale)/2,(height-HEIGHT*scale)/2
@@ -890,13 +885,12 @@ def window_logic(demo=False,demo_scenario='normal',fullscreen=None,screenshot=No
             release=rl.is_mouse_button_released(rl.MOUSE_BUTTON_LEFT)
             # Pause automatic navigation before it can change the target under
             # a finger arriving on the exact rotation deadline.
-            if (down or press) and not pointer.down:
+            if press or down and not pointer.down:
                 viewer.state.interact();dirty=True
 
             if viewer.refresh():
                 dirty=True
             if viewer.state.tick(time.monotonic()):
-                pointer.cancelled = True
                 dirty=True
             second=datetime.now().strftime('%Y%m%d%H%M%S')
             if clock!=second:
@@ -911,12 +905,12 @@ def window_logic(demo=False,demo_scenario='normal',fullscreen=None,screenshot=No
 
             point=((pos.x-ox)/scale,(pos.y-oy)/scale)
             action=pointer.update(point,down,painter.buttons,pressed=press,released=release)
-            pressed=pointer.target[1:3] if pointer.down and not pointer.cancelled and pointer.target else None
+            pressed=pointer.target[1:3] if pointer.down and pointer.target else None
             if painter.pressed!=pressed:
                 painter.pressed=pressed;dirty=True
             if action:
                 if action[0]=='fullscreen':
-                    display.toggle()
+                    toggle_display()
                 else:
                     viewer.dispatch(*action)
                 dirty=True

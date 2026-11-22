@@ -8,7 +8,7 @@ setup(
     description="A sports scores display",
     author="Guillaume Valadon",
     author_email="guillaume@valadon.net",
-    version="0.2.1",
+    version="0.2.2",
     python_requires=">=3.10",
     packages=["ippon"],
     package_data={"ippon": ["assets/fonts/*.ttf", "assets/fonts/*.txt",
