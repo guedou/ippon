@@ -42,13 +42,50 @@ class LiveScoreTests(unittest.TestCase):
                          "2": [goal(37, Min=90, MinEx=8, Sc=[2, 1]), goal(43)]})
         match, = livescore.convert(data, COMPETITION)
         self.assertEqual(match["date"], "20261120")
-        self.assertEqual(match["competition"], {"name": "Ligue 1", "level": "Jour #11"})
+        self.assertEqual(match["competition"], {"name": "Ligue 1", "level": "Jour 11"})
         self.assertEqual(match["teams"][0]["score"], 2)
         self.assertEqual(match["teams"][0]["goals"],
                          [("Antoine Mille", "19’", None), ("Antoine Mille", "90’ +8", "sp")])
         self.assertEqual(len(match["teams"][1]["goals"]), 1)
         self.assertEqual(match["teams"][0]["team1"]["logo"],
                          "https://storage.lsmedia1.com/images/team/medium/troyes.png")
+
+    def test_generic_phase_uses_official_fixture_round_not_one_for_all(self):
+        for home, away, expected in [('Olympique Marseille', 'RC Strasbourg', 'Jour 1'),
+                                    ('Toulouse FC', 'RC Strasbourg', 'Jour 10')]:
+            with self.subTest(home=home, away=away):
+                data = raw_data()
+                event = data['results']['Stages'][0]['Events'][0]
+                event['ErnInf'] = 'Regular Season'
+                event['T1'][0]['Nm'] = home
+                event['T2'][0]['Nm'] = away
+                converted, = livescore.convert(data, COMPETITION)
+                self.assertEqual(converted['competition']['level'], expected)
+                self.assertEqual(converted['date'], '20261120')
+
+    def test_provider_round_has_priority_over_official_schedule(self):
+        data = raw_data()
+        event = data['results']['Stages'][0]['Events'][0]
+        event['ErnInf'] = '1'
+        event['T1'][0]['Nm'] = 'Stade Rennais'
+        event['T2'][0]['Nm'] = 'Paris Saint-Germain'
+        # This ordered fixture is J23 in the official calendar. Keep a supplied
+        # provider number rather than silently changing an existing result.
+        converted, = livescore.convert(data, COMPETITION)
+        self.assertEqual(converted['competition']['level'], 'Jour 1')
+
+    def test_unmatched_or_other_season_phase_stays_unknown(self):
+        data = raw_data()
+        event = data['results']['Stages'][0]['Events'][0]
+        event['ErnInf'] = 'Regular Season'
+        event['T1'][0]['Nm'] = 'Unknown home'
+        converted, = livescore.convert(data, COMPETITION)
+        self.assertEqual(converted['competition']['level'], 'Jour inconnu')
+        event['T1'][0]['Nm'] = 'Olympique Marseille'
+        event['T2'][0]['Nm'] = 'RC Strasbourg'
+        event['Esd'] = 20251120194500
+        converted, = livescore.convert(data, {**COMPETITION, 'year': '2025'})
+        self.assertEqual(converted['competition']['level'], 'Jour inconnu')
 
     def test_logo_paths_include_team_size(self):
         data = raw_data()

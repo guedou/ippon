@@ -5,6 +5,8 @@ from datetime import datetime
 
 import requests
 
+from ippon.football_rounds import resolve_round
+
 API_URL = "https://prod-cdn-public-api.lsmedia1.com/v1/api/app"
 IMAGE_URL = "https://storage.lsmedia1.com/images/team/medium/"
 # 38/48 are missed penalties; 41 belongs to penalty shoot-outs.
@@ -87,7 +89,10 @@ def convert(data, competition):
         matches.append({
             "sport": "Football", "date": str(event["Esd"])[:8],
             "competition": {"name": competition["name"],
-                            "level": f"Jour #{event['ErnInf']}"},
+                            "level": resolve_round(event.get("ErnInf"),
+                                                   teams[0]["team1"]["name"],
+                                                   teams[1]["team2"]["name"],
+                                                   competition["year"])},
             "teams": teams,
         })
     return sorted(matches, key=lambda match: match["date"])

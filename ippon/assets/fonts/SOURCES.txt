@@ -1,0 +1,5 @@
+Noto Sans Regular and Bold, unmodified TrueType files.
+Bundled with LibreOffice; upstream project: https://github.com/notofonts/noto-fonts
+Copyright notices retained from each font name table.
+SIL Open Font License 1.1 text copied from the LibreOffice license bundle.
+See OFL.txt.

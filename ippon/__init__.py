@@ -17,10 +17,22 @@ def sync(max):
     sync_logic(max)
 
 
-@click.command(help="display scores")
-def view():
+@click.command(help="display the tactile dashboard")
+@click.option("--demo", is_flag=True, help="Use fictional data without network or accounts.")
+@click.option("--demo-scenario", default="normal", show_default=True,
+              type=click.Choice(["normal", "long", "offline", "empty", "loading", "error"]),
+              help="Choose the demo's content or source state (requires --demo).")
+@click.option("--fullscreen", is_flag=True, help="Start in fullscreen mode.")
+@click.option("--screenshot", type=click.Path(dir_okay=False),
+              help="Save a PNG of the last rendered frame.")
+@click.option("--frames", type=click.IntRange(min=1),
+              help="Exit after this many rendered frames (useful for screenshots).")
+def view(demo, demo_scenario, fullscreen, screenshot, frames):
+    if not demo and demo_scenario != "normal":
+        raise click.UsageError("--demo-scenario requires --demo.")
     from ippon.view import window_logic
-    window_logic()
+    window_logic(demo=demo, demo_scenario=demo_scenario,
+                 fullscreen=fullscreen, screenshot=screenshot, frames=frames)
 
 
 @click.command(help="display scores stats")

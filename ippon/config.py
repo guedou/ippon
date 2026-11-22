@@ -71,7 +71,9 @@ def load_configuation(filename):
         raise FileNotFoundError(f"File {filename} not found.")
 
     # read the configuration from CONFIG_FILENAME using configparser module
-    config = configparser.ConfigParser()
+    # Configuration values include opaque credentials and URLs. A percent sign
+    # is literal data here, never ConfigParser interpolation syntax.
+    config = configparser.ConfigParser(interpolation=None)
     config.read(filename)
 
     for section in config.sections():

@@ -1,0 +1,1307 @@
+{
+  "competition": "Ligue 1",
+  "source_id": "68",
+  "season_start": 2026,
+  "provenance": {
+    "publisher": "Ligue de Football Professionnel",
+    "announcement_url": "https://www.lfp.fr/article/ligue-1-mc-donald-s-le-calendrier-de-la-saison-2026-2027",
+    "calendar_url": "https://s3.eu-west-1.amazonaws.com/image.mpg/L1MD_2627_CALENDRIER.pdf",
+    "published_at": "2026-06-10",
+    "retrieved_at": "2026-11-22",
+    "extraction": "For each numbered round, pair the nine home clubs with the nine away clubs in PDF reading order. Only fixture facts are retained."
+  },
+  "rounds": {
+    "1": [
+      [
+        "ANGERS SCO",
+        "LOSC"
+      ],
+      [
+        "LE HAVRE",
+        "AS MONACO"
+      ],
+      [
+        "LE MANS FC",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "RC LENS",
+        "AJ AUXERRE"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "OGC NICE",
+        "FC LORIENT"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "TOULOUSE FC",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "ESTAC TROYES",
+        "PARIS FC"
+      ]
+    ],
+    "2": [
+      [
+        "AJ AUXERRE",
+        "ANGERS SCO"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "TOULOUSE FC"
+      ],
+      [
+        "LOSC",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "FC LORIENT",
+        "ESTAC TROYES"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "LE HAVRE"
+      ],
+      [
+        "AS MONACO",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "PARIS FC",
+        "OGC NICE"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "LE MANS FC"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "RC LENS"
+      ]
+    ],
+    "3": [
+      [
+        "ANGERS SCO",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "LE HAVRE",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "RC LENS",
+        "FC LORIENT"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "AJ AUXERRE"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "PARIS FC"
+      ],
+      [
+        "OGC NICE",
+        "LE MANS FC"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "AS MONACO"
+      ],
+      [
+        "TOULOUSE FC",
+        "LOSC"
+      ],
+      [
+        "ESTAC TROYES",
+        "RC STRASBOURG ALSACE"
+      ]
+    ],
+    "4": [
+      [
+        "AJ AUXERRE",
+        "OGC NICE"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "LE HAVRE",
+        "ANGERS SCO"
+      ],
+      [
+        "LE MANS FC",
+        "RC LENS"
+      ],
+      [
+        "LOSC",
+        "ESTAC TROYES"
+      ],
+      [
+        "FC LORIENT",
+        "TOULOUSE FC"
+      ],
+      [
+        "PARIS FC",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "AS MONACO"
+      ]
+    ],
+    "5": [
+      [
+        "ANGERS SCO",
+        "ESTAC TROYES"
+      ],
+      [
+        "AJ AUXERRE",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "LE MANS FC",
+        "FC LORIENT"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "AS MONACO",
+        "RC LENS"
+      ],
+      [
+        "OGC NICE",
+        "LOSC"
+      ],
+      [
+        "PARIS FC",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "TOULOUSE FC",
+        "LE HAVRE"
+      ]
+    ],
+    "6": [
+      [
+        "STADE BRESTOIS 29",
+        "ANGERS SCO"
+      ],
+      [
+        "RC LENS",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "LOSC",
+        "LE HAVRE"
+      ],
+      [
+        "FC LORIENT",
+        "PARIS FC"
+      ],
+      [
+        "AS MONACO",
+        "TOULOUSE FC"
+      ],
+      [
+        "OGC NICE",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "LE MANS FC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "AJ AUXERRE"
+      ],
+      [
+        "ESTAC TROYES",
+        "OLYMPIQUE DE MARSEILLE"
+      ]
+    ],
+    "7": [
+      [
+        "ANGERS SCO",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "LE HAVRE",
+        "AJ AUXERRE"
+      ],
+      [
+        "LE MANS FC",
+        "TOULOUSE FC"
+      ],
+      [
+        "LOSC",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "FC LORIENT",
+        "AS MONACO"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "OGC NICE"
+      ],
+      [
+        "PARIS FC",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "ESTAC TROYES",
+        "RC LENS"
+      ]
+    ],
+    "8": [
+      [
+        "ANGERS SCO",
+        "FC LORIENT"
+      ],
+      [
+        "AJ AUXERRE",
+        "LE MANS FC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "OGC NICE"
+      ],
+      [
+        "RC LENS",
+        "PARIS FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "LE HAVRE"
+      ],
+      [
+        "AS MONACO",
+        "LOSC"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "TOULOUSE FC",
+        "ESTAC TROYES"
+      ]
+    ],
+    "9": [
+      [
+        "LE HAVRE",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "LOSC",
+        "RC LENS"
+      ],
+      [
+        "FC LORIENT",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "ANGERS SCO"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "TOULOUSE FC"
+      ],
+      [
+        "OGC NICE",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "PARIS FC",
+        "AS MONACO"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "AJ AUXERRE"
+      ],
+      [
+        "ESTAC TROYES",
+        "LE MANS FC"
+      ]
+    ],
+    "10": [
+      [
+        "ANGERS SCO",
+        "OGC NICE"
+      ],
+      [
+        "AJ AUXERRE",
+        "PARIS FC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "LE HAVRE",
+        "FC LORIENT"
+      ],
+      [
+        "LE MANS FC",
+        "AS MONACO"
+      ],
+      [
+        "RC LENS",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "ESTAC TROYES"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "LOSC"
+      ],
+      [
+        "TOULOUSE FC",
+        "RC STRASBOURG ALSACE"
+      ]
+    ],
+    "11": [
+      [
+        "RC LENS",
+        "TOULOUSE FC"
+      ],
+      [
+        "LOSC",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "FC LORIENT",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "LE MANS FC"
+      ],
+      [
+        "AS MONACO",
+        "AJ AUXERRE"
+      ],
+      [
+        "OGC NICE",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "PARIS FC",
+        "ANGERS SCO"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "ESTAC TROYES",
+        "LE HAVRE"
+      ]
+    ],
+    "12": [
+      [
+        "ANGERS SCO",
+        "RC LENS"
+      ],
+      [
+        "AJ AUXERRE",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "PARIS FC"
+      ],
+      [
+        "LE HAVRE",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "LE MANS FC",
+        "LOSC"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "AS MONACO"
+      ],
+      [
+        "OGC NICE",
+        "ESTAC TROYES"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "FC LORIENT"
+      ],
+      [
+        "TOULOUSE FC",
+        "STADE RENNAIS FC"
+      ]
+    ],
+    "13": [
+      [
+        "RC LENS",
+        "LE HAVRE"
+      ],
+      [
+        "LOSC",
+        "AJ AUXERRE"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "OGC NICE"
+      ],
+      [
+        "AS MONACO",
+        "ANGERS SCO"
+      ],
+      [
+        "PARIS FC",
+        "LE MANS FC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "FC LORIENT"
+      ],
+      [
+        "TOULOUSE FC",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "ESTAC TROYES",
+        "OLYMPIQUE LYONNAIS"
+      ]
+    ],
+    "14": [
+      [
+        "ANGERS SCO",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "AJ AUXERRE",
+        "TOULOUSE FC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "ESTAC TROYES"
+      ],
+      [
+        "LE HAVRE",
+        "LE MANS FC"
+      ],
+      [
+        "FC LORIENT",
+        "LOSC"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "OGC NICE",
+        "RC LENS"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "PARIS FC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "AS MONACO"
+      ]
+    ],
+    "15": [
+      [
+        "STADE BRESTOIS 29",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "LE MANS FC",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "RC LENS",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "LOSC",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "FC LORIENT",
+        "AJ AUXERRE"
+      ],
+      [
+        "AS MONACO",
+        "OGC NICE"
+      ],
+      [
+        "PARIS FC",
+        "LE HAVRE"
+      ],
+      [
+        "TOULOUSE FC",
+        "ANGERS SCO"
+      ],
+      [
+        "ESTAC TROYES",
+        "STADE RENNAIS FC"
+      ]
+    ],
+    "16": [
+      [
+        "ANGERS SCO",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "AJ AUXERRE",
+        "ESTAC TROYES"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "FC LORIENT"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "LOSC"
+      ],
+      [
+        "AS MONACO",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "OGC NICE",
+        "LE HAVRE"
+      ],
+      [
+        "PARIS FC",
+        "TOULOUSE FC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "RC LENS"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "LE MANS FC"
+      ]
+    ],
+    "17": [
+      [
+        "LE HAVRE",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "LE MANS FC",
+        "ANGERS SCO"
+      ],
+      [
+        "RC LENS",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "LOSC",
+        "PARIS FC"
+      ],
+      [
+        "FC LORIENT",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "AJ AUXERRE"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "TOULOUSE FC",
+        "OGC NICE"
+      ],
+      [
+        "ESTAC TROYES",
+        "AS MONACO"
+      ]
+    ],
+    "18": [
+      [
+        "ANGERS SCO",
+        "LE HAVRE"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "LE MANS FC",
+        "OGC NICE"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "LOSC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "ESTAC TROYES"
+      ],
+      [
+        "AS MONACO",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "PARIS FC",
+        "AJ AUXERRE"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "FC LORIENT"
+      ],
+      [
+        "TOULOUSE FC",
+        "RC LENS"
+      ]
+    ],
+    "19": [
+      [
+        "AJ AUXERRE",
+        "AS MONACO"
+      ],
+      [
+        "LE HAVRE",
+        "TOULOUSE FC"
+      ],
+      [
+        "RC LENS",
+        "ANGERS SCO"
+      ],
+      [
+        "FC LORIENT",
+        "LE MANS FC"
+      ],
+      [
+        "OGC NICE",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "PARIS FC"
+      ],
+      [
+        "ESTAC TROYES",
+        "LOSC"
+      ]
+    ],
+    "20": [
+      [
+        "AJ AUXERRE",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "LE MANS FC",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "LOSC",
+        "OGC NICE"
+      ],
+      [
+        "FC LORIENT",
+        "LE HAVRE"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "RC LENS"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "ANGERS SCO"
+      ],
+      [
+        "PARIS FC",
+        "ESTAC TROYES"
+      ],
+      [
+        "TOULOUSE FC",
+        "AS MONACO"
+      ]
+    ],
+    "21": [
+      [
+        "ANGERS SCO",
+        "PARIS FC"
+      ],
+      [
+        "LE HAVRE",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "RC LENS",
+        "ESTAC TROYES"
+      ],
+      [
+        "LOSC",
+        "FC LORIENT"
+      ],
+      [
+        "AS MONACO",
+        "LE MANS FC"
+      ],
+      [
+        "OGC NICE",
+        "AJ AUXERRE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "TOULOUSE FC"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "OLYMPIQUE DE MARSEILLE"
+      ]
+    ],
+    "22": [
+      [
+        "AJ AUXERRE",
+        "LOSC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "AS MONACO"
+      ],
+      [
+        "LE MANS FC",
+        "PARIS FC"
+      ],
+      [
+        "FC LORIENT",
+        "ANGERS SCO"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "TOULOUSE FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "RC LENS"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "LE HAVRE"
+      ],
+      [
+        "ESTAC TROYES",
+        "OGC NICE"
+      ]
+    ],
+    "23": [
+      [
+        "ANGERS SCO",
+        "AJ AUXERRE"
+      ],
+      [
+        "LE HAVRE",
+        "OGC NICE"
+      ],
+      [
+        "RC LENS",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "LOSC",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "AS MONACO",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "PARIS FC",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "TOULOUSE FC",
+        "LE MANS FC"
+      ],
+      [
+        "ESTAC TROYES",
+        "FC LORIENT"
+      ]
+    ],
+    "24": [
+      [
+        "AJ AUXERRE",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "LOSC"
+      ],
+      [
+        "LE HAVRE",
+        "RC LENS"
+      ],
+      [
+        "LE MANS FC",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "ESTAC TROYES"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "AS MONACO"
+      ],
+      [
+        "OGC NICE",
+        "TOULOUSE FC"
+      ],
+      [
+        "PARIS FC",
+        "FC LORIENT"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "ANGERS SCO"
+      ]
+    ],
+    "25": [
+      [
+        "ANGERS SCO",
+        "LE MANS FC"
+      ],
+      [
+        "RC LENS",
+        "LOSC"
+      ],
+      [
+        "FC LORIENT",
+        "OGC NICE"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "AS MONACO",
+        "LE HAVRE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "PARIS FC"
+      ],
+      [
+        "TOULOUSE FC",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "ESTAC TROYES",
+        "AJ AUXERRE"
+      ]
+    ],
+    "26": [
+      [
+        "ANGERS SCO",
+        "AS MONACO"
+      ],
+      [
+        "AJ AUXERRE",
+        "RC LENS"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "FC LORIENT"
+      ],
+      [
+        "LE HAVRE",
+        "ESTAC TROYES"
+      ],
+      [
+        "LE MANS FC",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "LOSC",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "OGC NICE",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "PARIS FC",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "TOULOUSE FC"
+      ]
+    ],
+    "27": [
+      [
+        "LE MANS FC",
+        "AJ AUXERRE"
+      ],
+      [
+        "LOSC",
+        "TOULOUSE FC"
+      ],
+      [
+        "FC LORIENT",
+        "RC LENS"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "AS MONACO",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "OGC NICE",
+        "PARIS FC"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "LE HAVRE"
+      ],
+      [
+        "ESTAC TROYES",
+        "ANGERS SCO"
+      ]
+    ],
+    "28": [
+      [
+        "ANGERS SCO",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "AJ AUXERRE",
+        "FC LORIENT"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "LE MANS FC"
+      ],
+      [
+        "LE HAVRE",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "RC LENS",
+        "OGC NICE"
+      ],
+      [
+        "AS MONACO",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "LOSC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "ESTAC TROYES"
+      ],
+      [
+        "TOULOUSE FC",
+        "PARIS FC"
+      ]
+    ],
+    "29": [
+      [
+        "LE MANS FC",
+        "LE HAVRE"
+      ],
+      [
+        "LOSC",
+        "AS MONACO"
+      ],
+      [
+        "FC LORIENT",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "AJ AUXERRE"
+      ],
+      [
+        "OGC NICE",
+        "ANGERS SCO"
+      ],
+      [
+        "PARIS FC",
+        "RC LENS"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "ESTAC TROYES",
+        "TOULOUSE FC"
+      ]
+    ],
+    "30": [
+      [
+        "AJ AUXERRE",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "LE HAVRE",
+        "PARIS FC"
+      ],
+      [
+        "RC LENS",
+        "LE MANS FC"
+      ],
+      [
+        "AS MONACO",
+        "FC LORIENT"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "ANGERS SCO"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "OGC NICE"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "LOSC"
+      ],
+      [
+        "TOULOUSE FC",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "ESTAC TROYES",
+        "STADE BRESTOIS 29"
+      ]
+    ],
+    "31": [
+      [
+        "ANGERS SCO",
+        "TOULOUSE FC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "AJ AUXERRE"
+      ],
+      [
+        "LE MANS FC",
+        "ESTAC TROYES"
+      ],
+      [
+        "RC LENS",
+        "AS MONACO"
+      ],
+      [
+        "FC LORIENT",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "PARIS SAINT-GERMAIN"
+      ],
+      [
+        "OGC NICE",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "PARIS FC",
+        "LOSC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "LE HAVRE"
+      ]
+    ],
+    "32": [
+      [
+        "AJ AUXERRE",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "LE HAVRE"
+      ],
+      [
+        "LOSC",
+        "ANGERS SCO"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "LE MANS FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "RC LENS"
+      ],
+      [
+        "AS MONACO",
+        "PARIS FC"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "OGC NICE"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "ESTAC TROYES"
+      ],
+      [
+        "TOULOUSE FC",
+        "FC LORIENT"
+      ]
+    ],
+    "33": [
+      [
+        "ANGERS SCO",
+        "STADE BRESTOIS 29"
+      ],
+      [
+        "LE HAVRE",
+        "LOSC"
+      ],
+      [
+        "LE MANS FC",
+        "RC STRASBOURG ALSACE"
+      ],
+      [
+        "RC LENS",
+        "STADE RENNAIS FC"
+      ],
+      [
+        "FC LORIENT",
+        "OLYMPIQUE LYONNAIS"
+      ],
+      [
+        "OGC NICE",
+        "AS MONACO"
+      ],
+      [
+        "PARIS FC",
+        "OLYMPIQUE DE MARSEILLE"
+      ],
+      [
+        "TOULOUSE FC",
+        "AJ AUXERRE"
+      ],
+      [
+        "ESTAC TROYES",
+        "PARIS SAINT-GERMAIN"
+      ]
+    ],
+    "34": [
+      [
+        "AJ AUXERRE",
+        "LE HAVRE"
+      ],
+      [
+        "STADE BRESTOIS 29",
+        "RC LENS"
+      ],
+      [
+        "LOSC",
+        "LE MANS FC"
+      ],
+      [
+        "OLYMPIQUE LYONNAIS",
+        "PARIS FC"
+      ],
+      [
+        "OLYMPIQUE DE MARSEILLE",
+        "FC LORIENT"
+      ],
+      [
+        "AS MONACO",
+        "ESTAC TROYES"
+      ],
+      [
+        "PARIS SAINT-GERMAIN",
+        "TOULOUSE FC"
+      ],
+      [
+        "STADE RENNAIS FC",
+        "ANGERS SCO"
+      ],
+      [
+        "RC STRASBOURG ALSACE",
+        "OGC NICE"
+      ]
+    ]
+  }
+}

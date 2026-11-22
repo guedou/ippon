@@ -4,4 +4,4 @@ raylib
 cffi
 requests
 bs4
-pronotepy
+pronotepy==2.15.7

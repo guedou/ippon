@@ -1,0 +1,12 @@
+Club crests copied unchanged from the existing football logo cache.
+They are used for identification in this local UI demonstration.
+Club names and crests remain the property of their respective owners;
+these assets are not relicensed under the application code license.
+No data about accounts, pupils or real schedules is included.
+
+Olympique Marseille — https://storage.lsmedia1.com/images/team/medium/teambadge/marseille-2026.png
+Olympique Lyonnais — https://storage.lsmedia1.com/images/team/medium/enet/9748.png
+Monaco — https://storage.lsmedia1.com/images/team/medium/enet/9829.png
+RC Lens — https://storage.lsmedia1.com/images/team/medium/enet/8588.png
+Lille OSC — https://storage.lsmedia1.com/images/team/medium/enet/8639.png
+Paris Saint-Germain — https://storage.lsmedia1.com/images/team/medium/enet/9847.png
