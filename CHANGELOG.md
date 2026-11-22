@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 — 2026-11-22
+
+- Use a single raylib pointer stream for touchscreen taps and mouse clicks.
+- Keep valid taps through weather/source refreshes and tolerate small finger
+  movement while still cancelling drags and releases on a different button.
+- Start fullscreen automatically on Raspberry Pi, with an explicit windowed
+  option, and keep the existing desktop orientation and 800 × 480 canvas.
+- Restrict the Retina high-DPI window flag to macOS.
+
 ## 0.2.0 — 2026-11-22
 
 - Replace the viewer with an 800 × 480 tactile dashboard for HyperPixel 4 and

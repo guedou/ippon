@@ -97,6 +97,27 @@ class PointerTests(unittest.TestCase):
         self.update(30, True)
         self.assertEqual(self.update(30, False), ('nav', 'home'))
 
+    def test_small_drift_inside_button_is_a_tap_but_larger_drag_is_cancelled(self):
+        for drift, activates in ((20, True), (24, True), (25, False)):
+            with self.subTest(drift=drift):
+                pointer = PointerTracker()
+                self.assertIsNone(pointer.update((30, 40), True, self.buttons))
+                self.assertIsNone(pointer.update((30 + drift, 40), True, self.buttons))
+                action = pointer.update((30 + drift, 40), False, self.buttons)
+                self.assertEqual(action, ('nav', 'home') if activates else None)
+
+    def test_short_press_and_release_edges_activate_once_even_when_down_is_false(self):
+        action = self.pointer.update((40, 40), False, self.buttons,
+                                     pressed=True, released=True)
+        self.assertEqual(action, ('nav', 'home'))
+        self.assertFalse(self.pointer.down)
+        self.assertIsNone(self.pointer.update((40, 40), False, self.buttons))
+
+    def test_short_press_release_on_disabled_button_does_not_activate(self):
+        buttons = [((0, 0, 100, 80), 'match-next', None, True)]
+        self.assertIsNone(self.pointer.update((40, 40), False, buttons,
+                                              pressed=True, released=True))
+
     def test_crossing_another_target_cancels_even_short_excursion(self):
         self.update(95, True)
         self.update(105, True)
@@ -754,10 +775,10 @@ class LogoTests(unittest.TestCase):
 class WindowCoordinateTests(unittest.TestCase):
     def fake_raylib(self, frame, press_frame=None):
         rl = ModuleType('pyray')
-        for constant in ('LOG_WARNING', 'FLAG_WINDOW_RESIZABLE', 'FLAG_WINDOW_HIGHDPI',
-                         'KEY_NULL', 'KEY_Q', 'KEY_F', 'KEY_ESCAPE',
-                         'TEXTURE_FILTER_BILINEAR', 'MOUSE_BUTTON_LEFT', 'WHITE'):
-            setattr(rl, constant, 0)
+        for index, constant in enumerate(('LOG_WARNING', 'FLAG_WINDOW_RESIZABLE', 'FLAG_WINDOW_HIGHDPI',
+                                           'KEY_NULL', 'KEY_Q', 'KEY_F', 'KEY_ESCAPE',
+                                           'TEXTURE_FILTER_BILINEAR', 'MOUSE_BUTTON_LEFT', 'WHITE')):
+            setattr(rl, constant, 1 << index)
         for method in ('set_trace_log_level', 'set_config_flags', 'init_window',
                        'set_window_min_size', 'set_target_fps', 'set_exit_key',
                        'set_texture_filter', 'begin_texture_mode', 'end_texture_mode',
@@ -767,10 +788,13 @@ class WindowCoordinateTests(unittest.TestCase):
         rl.load_render_texture = Mock(return_value=SimpleNamespace(id=1, texture=object()))
         rl.get_screen_width = lambda: 1600
         rl.get_screen_height = lambda: 1000
-        rl.get_touch_point_count = lambda: 0
+        rl.get_touch_point_count = Mock(return_value=0)
+        rl.get_touch_position = Mock(return_value=SimpleNamespace(x=0, y=0))
         rl.is_key_pressed = lambda key: False
         rl.window_should_close = lambda: False
         rl.is_mouse_button_down = lambda button: frame[0] == press_frame
+        rl.is_mouse_button_pressed = lambda button: frame[0] == press_frame
+        rl.is_mouse_button_released = lambda button: press_frame is not None and frame[0] == press_frame + 1
         # 1600×1000 letterboxes the logical canvas by 20 px vertically.
         rl.get_mouse_position = lambda: SimpleNamespace(x=1100, y=880)
         rl.Vector2 = lambda x, y: SimpleNamespace(x=x, y=y)
@@ -778,6 +802,43 @@ class WindowCoordinateTests(unittest.TestCase):
         rl.draw_texture_pro = Mock()
         rl.end_drawing = lambda: frame.__setitem__(0, frame[0] + 1)
         return rl
+
+    def test_pi_default_borderless_fills_logical_rotated_screen_without_double_dpi(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        frame = [0]
+        rl = self.fake_raylib(frame)
+        screen = [640, 360]
+        borderless = [False]
+        rl.FLAG_BORDERLESS_WINDOWED_MODE = 1 << 20
+        rl.get_screen_width = lambda: screen[0]
+        rl.get_screen_height = lambda: screen[1]
+        # A larger framebuffer must not be mistaken for the logical screen.
+        rl.get_render_width = Mock(return_value=1600)
+        rl.get_render_height = Mock(return_value=960)
+        rl.is_window_fullscreen = Mock(return_value=False)
+        rl.is_window_state = lambda flag: flag == rl.FLAG_BORDERLESS_WINDOWED_MODE and borderless[0]
+
+        def toggle_borderless():
+            borderless[0] = not borderless[0]
+            screen[:] = [800, 480] if borderless[0] else [640, 360]
+
+        rl.toggle_borderless_windowed = Mock(side_effect=toggle_borderless)
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer), \
+                patch('ippon.view.sys.platform', 'linux'), \
+                patch('ippon.display.is_raspberry_pi', return_value=True):
+            # No explicit fullscreen option: the Pi appliance default applies.
+            window_logic(demo=True, frames=1)
+        rl.toggle_borderless_windowed.assert_called_once_with()
+        self.assertTrue(rl.is_window_state(rl.FLAG_BORDERLESS_WINDOWED_MODE))
+        self.assertEqual(rl.init_window.call_args.args[:2], (800, 480))
+        rl.load_render_texture.assert_called_once_with(800, 480)
+        rl.set_config_flags.assert_called_once_with(rl.FLAG_WINDOW_RESIZABLE)
+        self.assertEqual(rl.draw_texture_pro.call_args.args[2], (0, 0, 800, 480))
+        rl.get_render_width.assert_not_called()
+        rl.get_render_height.assert_not_called()
 
     def test_letterboxed_window_maps_release_to_logical_touch_target(self):
         """Exercise production transform through its event loop, not a copy of it."""
@@ -788,11 +849,143 @@ class WindowCoordinateTests(unittest.TestCase):
         with patch.dict(sys.modules, {'pyray': rl}), \
                 patch('ippon.view.Painter', return_value=painter), \
                 patch('ippon.view.Viewer', return_value=viewer):
-            window_logic(demo=True, frames=3)
+            window_logic(demo=True, fullscreen=False, frames=3)
         self.assertEqual(viewer.state.page, 'school')
         destination = rl.draw_texture_pro.call_args.args[2]
         self.assertEqual(destination, (0, 20, 1600, 960))
         rl.close_window.assert_called_once()
+
+    def test_first_frame_single_tap_has_hit_targets_before_press(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=0)
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=3)
+        self.assertEqual(viewer.state.page, 'school')
+        viewer.dispatch.assert_called_once_with('nav', 'school')
+
+    def test_tap_start_pauses_due_rotation_before_hero_target_can_change(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        viewer.state.set_auto(True, now=0)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        # Native (240, 210) is inside home's School hero, but no Football
+        # control. A due auto-rotation before input would silently lose the tap.
+        rl.get_mouse_position = lambda: SimpleNamespace(x=480, y=440)
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer), \
+                patch('ippon.view.time.monotonic', side_effect=lambda: frame[0] * 12):
+            window_logic(demo=True, fullscreen=False, frames=3)
+        self.assertEqual(viewer.state.auto, 'paused')
+        self.assertEqual(viewer.state.page, 'school')
+        viewer.dispatch.assert_called_once_with('home-school', None)
+
+    def test_single_mouse_tap_ignores_conflicting_raw_touch_mirror(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        # A raw touch counter can remain nonzero or report unrelated coordinates.
+        # The supported backend's mouse emulation is the sole coherent stream.
+        rl.get_touch_point_count.return_value = 1
+        rl.get_touch_position.return_value = SimpleNamespace(x=0, y=0)
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        self.assertEqual(viewer.state.page, 'school')
+        viewer.dispatch.assert_called_once_with('nav', 'school')
+        rl.get_touch_point_count.assert_not_called()
+        rl.get_touch_position.assert_not_called()
+
+    def test_single_tap_survives_weather_refresh_while_pointer_is_down(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.is_mouse_button_down = lambda button: frame[0] in (1, 2)
+        rl.is_mouse_button_released = lambda button: frame[0] == 3
+
+        def refresh_weather():
+            if frame[0] == 2:
+                viewer.data['weather'] = {**viewer.data['weather'], 'temperature': 13}
+                return True
+            return False
+
+        viewer.refresh = refresh_weather
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        self.assertEqual(viewer.data['weather']['temperature'], 13)
+        self.assertEqual(viewer.state.page, 'school')
+        viewer.dispatch.assert_called_once_with('nav', 'school')
+
+    def test_short_backend_press_release_edges_are_dispatched_once(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        frame = [0]
+        rl = self.fake_raylib(frame)
+        rl.is_mouse_button_pressed = lambda button: frame[0] == 1
+        rl.is_mouse_button_released = lambda button: frame[0] == 1
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        self.assertEqual(viewer.state.page, 'school')
+        viewer.dispatch.assert_called_once_with('nav', 'school')
+
+    def test_removing_pressed_control_during_refresh_cancels_activation(self):
+        painter = FakePainter()
+        viewer = Viewer(painter, demo=True)
+        viewer.dispatch = Mock(wraps=viewer.dispatch)
+        original_draw = viewer.draw
+        frame = [0]
+        rl = self.fake_raylib(frame, press_frame=1)
+        rl.is_mouse_button_down = lambda button: frame[0] in (1, 2)
+        rl.is_mouse_button_released = lambda button: frame[0] == 3
+
+        def redraw_without_school_navigation():
+            original_draw()
+            if frame[0] >= 2:
+                painter.buttons[:] = [button for button in painter.buttons
+                                      if button[1:3] != ('nav', 'school')]
+
+        viewer.draw = redraw_without_school_navigation
+        viewer.refresh = lambda: frame[0] == 2
+        with patch.dict(sys.modules, {'pyray': rl}), \
+                patch('ippon.view.Painter', return_value=painter), \
+                patch('ippon.view.Viewer', return_value=viewer):
+            window_logic(demo=True, fullscreen=False, frames=4)
+        self.assertEqual(viewer.state.page, 'home')
+        viewer.dispatch.assert_not_called()
+
+    def test_high_dpi_window_flag_is_only_enabled_on_macos(self):
+        for platform in ('linux', 'darwin'):
+            with self.subTest(platform=platform):
+                painter = FakePainter()
+                viewer = Viewer(painter, demo=True)
+                frame = [0]
+                rl = self.fake_raylib(frame)
+                with patch.dict(sys.modules, {'pyray': rl}), \
+                        patch('ippon.view.Painter', return_value=painter), \
+                        patch('ippon.view.Viewer', return_value=viewer), \
+                        patch('ippon.view.sys.platform', platform):
+                    window_logic(demo=True, fullscreen=False, frames=1)
+                expected = rl.FLAG_WINDOW_RESIZABLE
+                if platform == 'darwin':
+                    expected |= rl.FLAG_WINDOW_HIGHDPI
+                rl.set_config_flags.assert_called_once_with(expected)
 
     def test_second_boundary_redraws_without_input_or_source_updates(self):
         painter = FakePainter()
@@ -807,7 +1000,7 @@ class WindowCoordinateTests(unittest.TestCase):
                 patch('ippon.view.datetime', wraps=datetime) as clock:
             # Four frames, no interactions; only the third crosses a second.
             clock.now.side_effect = lambda: datetime(2026, 11, 22, 3, 4, 5 + frame[0] // 2)
-            window_logic(demo=True, frames=4)
+            window_logic(demo=True, fullscreen=False, frames=4)
         self.assertEqual(viewer.draw.call_count, 2)
         self.assertEqual(rl.begin_texture_mode.call_count, 2)
         drawn_clocks = [text for text in painter.texts

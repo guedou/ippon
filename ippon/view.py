@@ -12,9 +12,11 @@ import hashlib
 import logging
 import math
 import re
+import sys
 import time
 
 from ippon.config import StaticConfiguration
+from ippon.display import DisplayMode
 from ippon.ui_model import (NavigationState, ScoresService, all_goals,
                             format_match_date, latest_match, school_date,
                             sorted_rounds)
@@ -100,7 +102,16 @@ class PointerTracker:
         self.target = None
         self.cancelled = False
 
-    def update(self, point, down, buttons):
+    def update(self, point, down, buttons, pressed=False, released=False):
+        # Preserve a short tap when the backend reports both edges in one
+        # frame. Events already discarded by raylib cannot be reconstructed.
+        if pressed and released and not self.down:
+            self.update(point, True, buttons)
+            return self.update(point, False, buttons)
+        if released:
+            down = False
+        elif pressed:
+            down = True
         hit = next((b for b in reversed(buttons)
                     if not b[3] and contains(b[0], point)), None)
         result = None
@@ -109,7 +120,7 @@ class PointerTracker:
             self.target = hit
             self.cancelled = False
         if self.start is not None and (down or self.down):
-            self.cancelled |= math.dist(self.start, point) > 12
+            self.cancelled |= math.dist(self.start, point) > 24
             if self.target is not None and (hit is None or hit[1:3] != self.target[1:3]):
                 self.cancelled = True
         if self.down and not down:
@@ -834,67 +845,81 @@ class Viewer:
         self.reconcile()
 
 
-def window_logic(demo=False,demo_scenario='normal',fullscreen=False,screenshot=None,frames=None):
+def window_logic(demo=False,demo_scenario='normal',fullscreen=None,screenshot=None,frames=None):
     import pyray as rl
     rl.set_trace_log_level(rl.LOG_WARNING)
-    rl.set_config_flags(rl.FLAG_WINDOW_RESIZABLE | rl.FLAG_WINDOW_HIGHDPI)
+    flags = rl.FLAG_WINDOW_RESIZABLE
+    if sys.platform == 'darwin':
+        flags |= rl.FLAG_WINDOW_HIGHDPI
+    rl.set_config_flags(flags)
     rl.init_window(WIDTH,HEIGHT,'ippon — démo' if demo else 'ippon')
     painter=target=None
     try:
         rl.set_window_min_size(400,240)
         rl.set_target_fps(30)
         rl.set_exit_key(rl.KEY_NULL)
-        if fullscreen:
-            rl.toggle_fullscreen()
+        display = DisplayMode(rl, fullscreen)
+        display.start()
         painter=Painter(rl)
         target=rl.load_render_texture(WIDTH,HEIGHT)
         if not target.id:
             raise RuntimeError('Impossible de créer le canevas graphique.')
         rl.set_texture_filter(target.texture,rl.TEXTURE_FILTER_BILINEAR)
         viewer=Viewer(painter,demo,demo_scenario)
-        pointer=PointerTracker();last_touch=(0,0);was_touch=False
+        pointer=PointerTracker()
         dirty=True;clock=None;count=0
         while not rl.window_should_close():
             if rl.is_key_pressed(rl.KEY_Q):
                 break
             if rl.is_key_pressed(rl.KEY_F):
-                viewer.state.interact();rl.toggle_fullscreen();dirty=True
+                viewer.state.interact();display.toggle();dirty=True
+                pointer.cancelled = True
             if rl.is_key_pressed(rl.KEY_ESCAPE):
                 viewer.state.interact();viewer.state.back();dirty=True
+                pointer.cancelled = True
             width,height=rl.get_screen_width(),rl.get_screen_height()
             scale=max(.01,min(width/WIDTH,height/HEIGHT))
             ox,oy=(width-WIDTH*scale)/2,(height-HEIGHT*scale)/2
-            touch=rl.get_touch_point_count()>0
-            if touch:
-                pos=rl.get_touch_position(0);last_touch=(pos.x,pos.y)
-            elif was_touch:
-                pos=rl.Vector2(*last_touch)
-            else:
-                pos=rl.get_mouse_position()
-            down=touch or rl.is_mouse_button_down(rl.MOUSE_BUTTON_LEFT)
-            point=((pos.x-ox)/scale,(pos.y-oy)/scale)
-            if down and not pointer.down:
+
+            # Use the same raylib mouse stream as main. X11 and raylib map the
+            # touchscreen to it; mixing its state with raw touch counts can
+            # retain a press after the finger has already been released.
+            pos=rl.get_mouse_position()
+            down=rl.is_mouse_button_down(rl.MOUSE_BUTTON_LEFT)
+            press=rl.is_mouse_button_pressed(rl.MOUSE_BUTTON_LEFT)
+            release=rl.is_mouse_button_released(rl.MOUSE_BUTTON_LEFT)
+            # Pause automatic navigation before it can change the target under
+            # a finger arriving on the exact rotation deadline.
+            if (down or press) and not pointer.down:
                 viewer.state.interact();dirty=True
-            action=pointer.update(point,down,painter.buttons)
+
+            if viewer.refresh():
+                dirty=True
+            if viewer.state.tick(time.monotonic()):
+                pointer.cancelled = True
+                dirty=True
+            second=datetime.now().strftime('%Y%m%d%H%M%S')
+            if clock!=second:
+                clock=second;dirty=True
+            # Build hit targets before processing the very first tap, and use
+            # the current layout when a source refreshes during a press.
+            if dirty:
+                rl.begin_texture_mode(target)
+                viewer.draw()
+                rl.end_texture_mode()
+                dirty=False
+
+            point=((pos.x-ox)/scale,(pos.y-oy)/scale)
+            action=pointer.update(point,down,painter.buttons,pressed=press,released=release)
             pressed=pointer.target[1:3] if pointer.down and not pointer.cancelled and pointer.target else None
             if painter.pressed!=pressed:
                 painter.pressed=pressed;dirty=True
             if action:
                 if action[0]=='fullscreen':
-                    rl.toggle_fullscreen()
+                    display.toggle()
                 else:
                     viewer.dispatch(*action)
                 dirty=True
-            was_touch=touch
-            if viewer.refresh():
-                if pointer.down:
-                    pointer.cancelled=True
-                dirty=True
-            if viewer.state.tick(time.monotonic()):
-                dirty=True
-            second=datetime.now().strftime('%Y%m%d%H%M%S')
-            if clock!=second:
-                clock=second;dirty=True
             if dirty:
                 rl.begin_texture_mode(target)
                 viewer.draw()

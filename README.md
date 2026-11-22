@@ -133,6 +133,15 @@ requires `--demo`. `--frames N` exits after N rendered frames; use it with
 On macOS, a desktop session is required for the native window, including when
 capturing a screenshot. Pi display, rotation and touch still require an actual
 device test; macOS is suitable for navigation and layout development.
+On Raspberry Pi hardware, the viewer starts in borderless fullscreen by default.
+Other computers, including macOS and ordinary Linux desktops, start in a window.
+Use `--fullscreen` or `--windowed` to override this choice. Fullscreen uses the
+current desktop geometry: it does not request a different resolution or change
+rotation. For a HyperPixel already configured as an 800×480 rotated X11 desktop,
+keep that system configuration. Native displays already running fullscreen stay
+in their native mode. A raylib build without borderless support keeps its window
+and logs a warning instead of switching to an exclusive video mode.
+
 The desktop window can be resized while preserving the canvas aspect ratio.
 Keyboard shortcuts: `F` toggles fullscreen, `Esc` goes back, and `Q` exits.
 Screenshots and mouse navigation on macOS do not validate physical target sizes
